@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About Us | PropertyHub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .stat-card {
+            background: rgba(197, 160, 89, 0.1);
+            border: 1px solid var(--primary-gold);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-card h2 { color: var(--primary-gold); margin: 0; }
+        .vision-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-dim); }
+        .trend-box { margin-top: 30px; border-left: 3px solid var(--primary-gold); padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <nav>
+            <a href="index.html" class="logo"><i class="fas fa-house-chimney-window" style="color: var(--primary-gold);"></i> PropertyHub</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="testimonials.html">Testimonials</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+<section class="container animate">
+    <a href="index.html" style="text-decoration: none; color: var(--primary-gold); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: bold;">
+        <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+
+    <div class="glass-panel">
+        <h1>Redefining Trust in Real Estate</h1>
+        </div>
+</section>
+        <section class="container animate">
+            <div class="glass-panel">
+                <h1>Redefining Trust in Real Estate</h1>
+                <p class="vision-text">
+                    PropertyHub isn't just a marketplace; it's a unified digital ecosystem. We solved the transparency gap by integrating **Biometric Identity Verification** and **Blockchain-secured document handling**. Our goal is to make buying a house as simple and secure as ordering a smartphone.
+                </p>
+
+                <div class="stats-grid">
+                    <div class="stat-card"><h2>15k+</h2><p>Verified Properties</p></div>
+                    <div class="stat-card"><h2>$2.4B</h2><p>Transaction Volume</p></div>
+                    <div class="stat-card"><h2>99.9%</h2><p>Secure Escrow Rate</p></div>
+                </div>
+
+                <div class="trend-box">
+                    <h3>Market Trends Visualization</h3>
+                    <p>Our AI-driven engine provides <strong>Price Insights</strong>. By analyzing location-based data (schools, hospitals, transport), we offer a 5-year value projection for every listing on the platform.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

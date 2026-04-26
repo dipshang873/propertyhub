@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Testimonials | PropertyHub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        .testimonial-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            border-radius: 20px;
+            position: relative;
+            transition: 0.3s;
+        }
+        .testimonial-card:hover { border-color: var(--primary-gold); transform: translateY(-5px); }
+        .user-info { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .user-avatar { width: 50px; height: 50px; border-radius: 50%; background: #333; }
+        .property-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--primary-gold);
+            background: rgba(197, 160, 89, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .stars { color: #ffd700; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <nav>...</nav> <section class="container animate">
+            <h1>Success Stories</h1>
+            <p style="color: var(--text-dim);">Join 38,000+ happy homeowners who found their future on PropertyHub.</p>
+
+            <div class="reviews-grid">
+                <div class="testimonial-card">
+                    <span class="property-tag">Luxury Apartment</span>
+                    <div class="stars">★★★★★</div>
+                    <p>"The virtual tour was so detailed I felt like I was already there. The digital rental agreement took 5 minutes to sign!"</p>
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--glass-border);">
+                    <div class="user-info">
+                        <div class="user-avatar" style="background: url('https://i.pravatar.cc/150?u=1') center/cover;"></div>
+                        <div>
+                            <h4 style="margin:0;">Marcus Sterling</h4>
+                            <small style="color:var(--text-dim);">Verified Buyer</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="property-tag">Commercial Land</span>
+                    <div class="stars">★★★★★</div>
+                    <p>"Buying land was always stressful until I found PropertyHub. The location-based info on nearby transport was a game-changer for my business."</p>
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--glass-border);">
+                    <div class="user-info">
+                        <div class="user-avatar" style="background: url('https://i.pravatar.cc/150?u=2') center/cover;"></div>
+                        <div>
+                            <h4 style="margin:0;">Elena Rodriguez</h4>
+                            <small style="color:var(--text-dim);">Verified Business Owner</small>
+                        </div>
+                    </div>
+                </div>
+<section class="container animate">
+    <a href="index.html" style="text-decoration: none; color: var(--primary-gold); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: bold;">
+        <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+
+    <h1>Success Stories</h1>
+    <p style="color: var(--text-dim);">Join 38,000+ happy homeowners who found their future on PropertyHub.</p>
+    
+    </section>
+                <div class="testimonial-card">
+                    <span class="property-tag">Modern Villa</span>
+                    <div class="stars">★★★★★</div>
+                    <p>"The in-app chat allowed me to talk to the seller instantly. No middle-man, no hidden fees. Fully transparent process!"</p>
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--glass-border);">
+                    <div class="user-info">
+                        <div class="user-avatar" style="background: url('https://i.pravatar.cc/150?u=3') center/cover;"></div>
+                        <div>
+                            <h4 style="margin:0;">James Wu</h4>
+                            <small style="color:var(--text-dim);">First-time Renter</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

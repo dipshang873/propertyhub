@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Features - PropertyHub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .features-hero { padding: 120px 5% 40px; text-align: center; }
+        .search-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-group { flex: 1; min-width: 150px; text-align: left; }
+        .filter-group label { display: block; font-size: 0.8rem; color: var(--primary-gold); margin-bottom: 5px; }
+        .filter-group select, .filter-group input {
+            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
+            color: white; padding: 10px; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo"><i class="fas fa-house-chimney-window"></i> PropertyHub</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="features.html" style="color: var(--primary-gold)">Features</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="testimonials.html">Testimonials</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="features-hero">
+        <h1 style="margin-bottom: 20px;">Smart Property Search</h1>
+        <div class="search-container">
+            <div class="filter-group">
+                <label>Location</label>
+                <input type="text" placeholder="City, Zip...">
+            </div>
+            <div class="filter-group">
+                <label>Property Type</label>
+                <select><option>Apartment</option><option>House</option><option>Commercial</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Price Range</label>
+                <select><option>$100k - $500k</option><option>$500k+</option></select>
+            </div>
+            <button class="btn-gold" style="align-self: flex-end; height: 42px;">Search Now</button>
+        </div>
+    </div>
+</body>
+</html>
