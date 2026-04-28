@@ -132,3 +132,15 @@ h1 { font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary-gold); }
 }
 
 .animate { animation: fadeInUp 0.8s ease forwards; }
+.map{
+            background: white;
+            padding: 15px;
+            border-radius: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-top: 30px;
+        }
+    .op{
+            text-align: center; padding: 40px; color: var(--slate-gray); font-size: 0.8rem; }
+        
