@@ -143,4 +143,85 @@ h1 { font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary-gold); }
         }
     .op{
             text-align: center; padding: 40px; color: var(--slate-gray); font-size: 0.8rem; }
-        
+        /* ── Hero Background ── */
+.hero-section {
+  position: relative;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  background: 
+    linear-gradient(to bottom, rgba(10, 10, 12, 0.7), var(--bg-deep)),
+    url('future.png') center/cover no-repeat; /* Replace with your background image */
+  margin-top: -64px; /* Pulls background behind the transparent nav */
+  padding-top: 100px;
+}
+
+/* ── Property Image Gallery ── */
+.property-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.property-card {
+  padding: 0; /* Override glass-panel padding for image flush fit */
+  overflow: hidden;
+}
+
+.image-container {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.property-card:hover .image-container img {
+  transform: scale(1.1); /* Subtle zoom effect on hover */
+}
+
+.image-container .property-tag {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 2;
+}
+
+.card-content {
+  padding: 24px;
+}
+
+.card-content h3 {
+  margin-bottom: 8px;
+  color: var(--text-bright);
+}
+/* Ensure these variables and classes are in your style.css */
+:root {
+    --primary-gold: #c5a059;
+    --dark-bg: #0b0d17;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
+    --text-dim: #b0b0b0;
+    --nav-height: 80px;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+    /* This applies the background image to every page */
+    background: linear-gradient(rgba(11, 13, 23, 0.8), rgba(11, 13, 23, 0.95)), 
+                url('future.png') center/cover no-repeat fixed;
+}
+
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    padding: 40px;
+    border-radius: 20px;
+}
