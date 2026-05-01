@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PropertyHub | Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── CSS VARIABLES ── */
+    :root {
+      --primary-gold: #c5a059;
+      --gold-light: #e8c87a;
+      --gold-glow: rgba(197,160,89,0.18);
+      --dark-bg: #0b0d17;
+      --glass-bg: rgba(255,255,255,0.04);
+      --glass-border: rgba(255,255,255,0.09);
+      --text-main: #ffffff;
+      --text-dim: rgba(255,255,255,0.55);
+      --nav-height: 70px;
+      --transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+      --radius: 18px;
+      --shadow-gold: 0 8px 32px rgba(197,160,89,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--dark-bg);
+      color: var(--text-main);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page-wrapper {
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(11,13,23,0.82), rgba(11,13,23,0.97)),
+        url('future.png') center/cover no-repeat fixed;
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5%;
+      height: var(--nav-height);
+      background: rgba(11,13,23,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid var(--glass-border);
+      transition: var(--transition);
+    }
+    nav.scrolled {
+      background: rgba(11,13,23,0.98);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 0.3px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      align-items: center;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      letter-spacing: 0.3px;
+      transition: 0.3s;
+      padding: 6px 0;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0;
+      width: 0; height: 2px;
+      background: var(--primary-gold);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+    .nav-links a:hover, .nav-links a.active { color: var(--primary-gold); }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .nav-icon-btn {
+      position: relative;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-dim);
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 0.95rem;
+    }
+    .nav-icon-btn:hover {
+      border-color: var(--primary-gold);
+      color: var(--primary-gold);
+      background: rgba(197,160,89,0.08);
+    }
+    .nav-badge {
+      position: absolute;
+      top: -6px; right: -6px;
+      background: var(--primary-gold);
+      color: #000;
+      font-size: 0.6rem;
+      font-weight: bold;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transform: scale(0);
+      transition: 0.2s ease;
+    }
+    .nav-badge.visible { opacity: 1; transform: scale(1); }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 5px;
+      z-index: 1001;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px; height: 2px;
+      background: var(--text-dim);
+      border-radius: 2px;
+      transition: 0.3s ease;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: var(--primary-gold); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--primary-gold); }
+
+    /* ── SIDE PANELS ── */
+    .side-panel-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 2000;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .side-panel-overlay.open { opacity: 1; pointer-events: all; }
+    .side-panel {
+      position: fixed;
+      top: 0; right: -420px;
+      width: min(400px, 100vw);
+      height: 100vh;
+      background: #10121e;
+      border-left: 1px solid var(--glass-border);
+      z-index: 2001;
+      transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+    }
+    .side-panel.open { right: 0; }
+    .side-panel-header {
+      padding: 25px 28px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(197,160,89,0.04);
+    }
+    .side-panel-header h3 { color: var(--primary-gold); font-size: 1.1rem; letter-spacing: 0.5px; }
+    .close-panel {
+      background: none; border: none; color: var(--text-dim);
+      font-size: 1.2rem; cursor: pointer; transition: 0.2s; padding: 5px;
+    }
+    .close-panel:hover { color: #fff; }
+    .side-panel-body { flex: 1; overflow-y: auto; padding: 20px 28px; }
+    .panel-empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-dim); font-size: 0.9rem;
+    }
+    .panel-empty i { font-size: 3rem; color: rgba(197,160,89,0.2); display: block; margin-bottom: 15px; }
+    .panel-item {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 14px; margin-bottom: 12px;
+      transition: 0.2s;
+    }
+    .panel-item:hover { border-color: var(--primary-gold); }
+    .panel-item-img {
+      width: 60px; height: 60px; border-radius: 10px;
+      background: var(--glass-bg); flex-shrink: 0;
+    }
+    .panel-item-info { flex: 1; min-width: 0; }
+    .panel-item-info h4 { font-size: 0.88rem; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .panel-item-info span { font-size: 0.8rem; color: var(--primary-gold); font-weight: bold; }
+    .panel-item-remove {
+      background: none; border: none; color: var(--text-dim);
+      cursor: pointer; font-size: 0.85rem; transition: 0.2s; padding: 5px;
+    }
+    .panel-item-remove:hover { color: #ff6b6b; }
+    .side-panel-footer { padding: 20px 28px; border-top: 1px solid var(--glass-border); }
+
+    /* ── BTN ── */
+    .btn-gold {
+      background: var(--primary-gold);
+      color: #000;
+      padding: 0.65rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      text-decoration: none;
+      font-family: 'DM Sans', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-gold);
+      background: var(--gold-light);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      padding: 0.65rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      text-decoration: none;
+      font-family: 'DM Sans', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-outline:hover {
+      background: var(--glass-bg);
+      border-color: var(--primary-gold);
+      color: var(--primary-gold);
+      transform: translateY(-2px);
+    }
+    .btn-sm {
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      border-radius: 7px;
+    }
+
+    /* ── CONTAINER ── */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 5%;
+    }
+
+    /* ── HERO BANNER ── */
+    .hero-banner {
+      padding-top: calc(var(--nav-height) + 60px);
+      padding-bottom: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(197,160,89,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+    }
+    .hero-left { flex: 1; }
+    .hero-right {
+      flex: 0 0 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(197,160,89,0.1);
+      border: 1px solid rgba(197,160,89,0.25);
+      border-radius: 50px;
+      padding: 5px 14px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--primary-gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero-eyebrow span {
+      width: 6px; height: 6px;
+      background: var(--primary-gold);
+      border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.15;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    .hero-title .accent { color: var(--primary-gold); }
+    .hero-subtitle {
+      color: var(--text-dim);
+      font-size: 1rem;
+      line-height: 1.8;
+      max-width: 520px;
+      margin-bottom: 32px;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    /* Stat cards in hero */
+    .stat-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 22px 24px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary-gold), transparent);
+      opacity: 0;
+      transition: 0.3s;
+    }
+    .stat-card:hover { border-color: rgba(197,160,89,0.4); transform: translateY(-4px); }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-gold);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+    }
+    .stat-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #4ade80;
+      margin-top: 4px;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .section-title span { color: var(--primary-gold); }
+    .section-sub {
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      margin-top: 5px;
+    }
+    .gold-divider {
+      width: 40px; height: 2px;
+      background: var(--primary-gold);
+      margin: 10px 0 0;
+      border-radius: 2px;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-section {
+      padding: 40px 0;
+    }
+    .search-glass {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 30px 35px;
+      backdrop-filter: blur(20px);
+    }
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+    .search-field label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .search-field input,
+    .search-field select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: 0.3s;
+    }
+    .search-field input::placeholder { color: var(--text-dim); }
+    .search-field input:focus,
+    .search-field select:focus {
+      border-color: var(--primary-gold);
+      background: rgba(197,160,89,0.05);
+      box-shadow: 0 0 0 3px rgba(197,160,89,0.1);
+    }
+    .search-field select option { background: #10121e; }
+
+    /* ── PROPERTY GRID ── */
+    .properties-section { padding: 40px 0; }
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+    }
+    .property-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: pointer;
+      animation: fadeSlideUp 0.6s ease both;
+    }
+    .property-card:hover {
+      border-color: rgba(197,160,89,0.4);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3), var(--shadow-gold);
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .property-card:nth-child(1) { animation-delay: 0.1s; }
+    .property-card:nth-child(2) { animation-delay: 0.2s; }
+    .property-card:nth-child(3) { animation-delay: 0.3s; }
+    .property-card:nth-child(4) { animation-delay: 0.4s; }
+    .property-card:nth-child(5) { animation-delay: 0.5s; }
+    .property-card:nth-child(6) { animation-delay: 0.6s; }
+    .card-image {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a1d2e 0%, #0d0f1a 100%);
+    }
+    .card-image img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .property-card:hover .card-image img { transform: scale(1.08); }
+    .card-badge {
+      position: absolute;
+      top: 14px; left: 14px;
+      background: var(--primary-gold);
+      color: #000;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 50px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .card-badge.rent { background: #4ade80; }
+    .card-badge.sold { background: #64748b; }
+    .card-actions-top {
+      position: absolute;
+      top: 14px; right: 14px;
+      display: flex;
+      gap: 6px;
+    }
+    .card-action-btn {
+      width: 34px; height: 34px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.8);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: 0.2s;
+      border: none;
+    }
+    .card-action-btn:hover { background: var(--primary-gold); color: #000; }
+    .card-action-btn.active { color: #ff6b6b; }
+    .card-body { padding: 20px 22px; }
+    .card-location {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .card-location i { color: var(--primary-gold); font-size: 0.7rem; }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .card-specs {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .spec {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+    .spec i { color: var(--primary-gold); font-size: 0.72rem; }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--glass-border);
+    }
+    .card-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary-gold);
+    }
+    .card-price span { font-size: 0.75rem; font-family: 'DM Sans', sans-serif; color: var(--text-dim); font-weight: 400; }
+    .card-cta-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ── PLACEHOLDER CARD IMAGE ── */
+    .img-placeholder {
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: rgba(197,160,89,0.2);
+      background: linear-gradient(135deg, rgba(197,160,89,0.05), rgba(197,160,89,0.02));
+    }
+
+    /* ── FEATURES SECTION ── */
+    .features-section { padding: 60px 0; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .feature-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 28px 24px;
+      transition: var(--transition);
+      animation: fadeSlideUp 0.6s ease both;
+    }
+    .feature-card:hover {
+      border-color: rgba(197,160,89,0.4);
+      transform: translateY(-5px);
+    }
+    .feature-icon {
+      width: 52px; height: 52px;
+      background: rgba(197,160,89,0.1);
+      border: 1px solid rgba(197,160,89,0.2);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      color: var(--primary-gold);
+      margin-bottom: 18px;
+      transition: 0.3s;
+    }
+    .feature-card:hover .feature-icon {
+      background: rgba(197,160,89,0.18);
+      transform: rotate(-5deg) scale(1.05);
+    }
+    .feature-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.82rem; color: var(--text-dim); line-height: 1.65; }
+
+    /* ── MAP SECTION ── */
+    .map-section { padding: 60px 0; }
+    .map-wrapper {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+    .map-header {
+      padding: 28px 35px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(197,160,89,0.03);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .map-header-left h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .map-header-left p { color: var(--text-dim); font-size: 0.85rem; }
+    .map-body {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      min-height: 560px;
+    }
+    .map-controls {
+      padding: 28px;
+      border-right: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+    .map-controls::-webkit-scrollbar { width: 4px; }
+    .map-controls::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+    .control-group label {
+      display: block;
+      font-size: 0.73rem;
+      color: var(--text-dim);
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: 0.3s;
+    }
+    .control-group input::placeholder { color: var(--text-dim); }
+    .control-group input:focus,
+    .control-group select:focus {
+      border-color: var(--primary-gold);
+      background: rgba(197,160,89,0.05);
+      box-shadow: 0 0 0 3px rgba(197,160,89,0.1);
+    }
+    .control-group select option { background: #10121e; }
+    .property-select-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .prop-select-card {
+      background: rgba(255,255,255,0.03);
+      border: 1.5px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .prop-select-card.selected,
+    .prop-select-card:hover {
+      border-color: var(--primary-gold);
+      background: rgba(197,160,89,0.07);
+    }
+    .prop-select-card.selected::before {
+      content: '';
+    }
+    .prop-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--glass-border);
+      border: 2px solid var(--glass-border);
+      transition: 0.2s;
+    }
+    .prop-select-card.selected .prop-dot {
+      background: var(--primary-gold);
+      border-color: var(--primary-gold);
+      box-shadow: 0 0 8px rgba(197,160,89,0.5);
+    }
+    .prop-select-info h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+    .prop-select-info span { font-size: 0.75rem; color: var(--text-dim); }
+    .distance-result-box {
+      background: rgba(197,160,89,0.08);
+      border: 1px solid rgba(197,160,89,0.2);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: none;
+      animation: fadeSlideUp 0.4s ease both;
+    }
+    .distance-result-box.show { display: block; }
+    .distance-result-box h4 {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .distance-result-box h4 i { color: var(--primary-gold); }
+    .distance-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--primary-gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .distance-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+    .distance-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .dist-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .dist-item-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .dist-item-value {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .dist-item-value i { color: var(--primary-gold); font-size: 0.75rem; }
+    .map-frame {
+      position: relative;
+      min-height: 560px;
+      background: #0d0f1a;
+    }
+    #map-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      min-height: 560px;
+    }
+    .map-overlay-msg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: rgba(11,13,23,0.85);
+      backdrop-filter: blur(4px);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 20px;
+      transition: opacity 0.3s;
+    }
+    .map-overlay-msg i {
+      font-size: 3rem;
+      color: rgba(197,160,89,0.25);
+      display: block;
+    }
+    .map-overlay-msg.hidden { opacity: 0; pointer-events: none; }
+    .locate-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      background: rgba(197,160,89,0.1);
+      border: 1px solid rgba(197,160,89,0.25);
+      color: var(--primary-gold);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .locate-btn:hover { background: rgba(197,160,89,0.18); }
+    .locate-status {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: -8px;
+    }
+    .locate-status.success { color: #4ade80; }
+    .locate-status.error { color: #f87171; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-section { padding: 60px 0; }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .testimonial-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 26px 24px;
+      transition: var(--transition);
+      animation: fadeSlideUp 0.6s ease both;
+    }
+    .testimonial-card:hover {
+      border-color: rgba(197,160,89,0.3);
+      transform: translateY(-4px);
+    }
+    .testimonial-card:nth-child(2) { animation-delay: 0.15s; }
+    .testimonial-card:nth-child(3) { animation-delay: 0.3s; }
+    .stars { color: var(--primary-gold); font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 2px; }
+    .testimonial-text {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.75;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .author-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-gold), var(--gold-light));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #000;
+      flex-shrink: 0;
+    }
+    .author-name { font-size: 0.88rem; font-weight: 600; color: #fff; }
+    .author-role { font-size: 0.75rem; color: var(--text-dim); }
+
+    /* ── CTA BANNER ── */
+    .cta-section { padding: 60px 0; }
+    .cta-banner {
+      background: linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.04));
+      border: 1px solid rgba(197,160,89,0.2);
+      border-radius: 24px;
+      padding: 60px 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-banner::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(197,160,89,0.1), transparent 70%);
+      pointer-events: none;
+    }
+    .cta-left h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .cta-left p { color: var(--text-dim); font-size: 0.95rem; }
+
+    /* ── FOOTER ── */
+    footer.op {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--glass-border);
+    }
+    footer.op span { color: var(--primary-gold); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 30px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #10121e;
+      border: 1px solid var(--glass-border);
+      padding: 14px 24px;
+      border-radius: 12px;
+      color: #fff;
+      z-index: 3000;
+      opacity: 0;
+      transition: 0.3s;
+      white-space: nowrap;
+      font-size: 0.88rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+    .toast i { color: var(--primary-gold); margin-right: 6px; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── SCROLL ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .map-body { grid-template-columns: 1fr; }
+      .map-controls { border-right: none; border-bottom: 1px solid var(--glass-border); }
+    }
+    @media (max-width: 900px) {
+      .hero-inner { flex-direction: column; gap: 40px; }
+      .hero-right { flex: none; width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+      .search-row { grid-template-columns: 1fr 1fr; }
+      .search-row > *:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+      .nav-links {
+        position: fixed;
+        top: var(--nav-height); left: 0;
+        width: 100%;
+        flex-direction: column;
+        background: rgba(11,13,23,0.98);
+        backdrop-filter: blur(20px);
+        padding: 20px 0 30px;
+        gap: 0;
+        border-bottom: 1px solid var(--glass-border);
+        transform: translateY(-110%);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+      }
+      .nav-links.mobile-active { transform: translateY(0); opacity: 1; pointer-events: all; }
+      .nav-links li { width: 100%; }
+      .nav-links a { display: block; padding: 14px 5%; border-bottom: 1px solid var(--glass-border); }
+      .nav-links a::after { display: none; }
+      .cta-banner { padding: 40px 28px; }
+      .map-header { padding: 22px 20px; }
+      .map-controls { padding: 20px; }
+    }
+    @media (max-width: 600px) {
+      .hero-right { grid-template-columns: 1fr; }
+      .search-row { grid-template-columns: 1fr; }
+      .property-grid { grid-template-columns: 1fr; }
+      .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .cta-banner { text-align: center; justify-content: center; }
+      .distance-breakdown { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ── TOAST ── -->
+  <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toast-msg">Done!</span></div>
+
+  <!-- ── OVERLAY ── -->
+  <div class="side-panel-overlay" id="overlay" onclick="closePanels()"></div>
+
+  <!-- ── FAVOURITES PANEL ── -->
+  <div class="side-panel" id="fav-panel">
+    <div class="side-panel-header">
+      <h3><i class="fas fa-heart"></i> &nbsp;Saved Favourites</h3>
+      <button class="close-panel" onclick="closePanels()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="side-panel-body" id="fav-body">
+      <div class="panel-empty" id="fav-empty">
+        <i class="fas fa-heart-crack"></i>
+        No saved favourites yet.<br>Heart a property to save it here.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CART PANEL ── -->
+  <div class="side-panel" id="cart-panel">
+    <div class="side-panel-header">
+      <h3><i class="fas fa-shopping-bag"></i> &nbsp;My Cart</h3>
+      <button class="close-panel" onclick="closePanels()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="side-panel-body" id="cart-body">
+      <div class="panel-empty" id="cart-empty">
+        <i class="fas fa-bag-shopping"></i>
+        Your cart is empty.<br>Add properties from the listings below.
+      </div>
+    </div>
+    <div class="side-panel-footer" id="cart-footer" style="display:none;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:15px;font-size:0.88rem;color:var(--text-dim);">
+        <span id="cart-count-label">0 properties</span>
+        <span style="color:var(--primary-gold);font-weight:600;">Selected</span>
+      </div>
+      <a href="listing.html" class="btn-gold" style="display:block;text-align:center;text-decoration:none;padding:14px;">Go to Market</a>
+    </div>
+  </div>
+
+  <!-- ── NAV ── -->
+  <nav id="mainNav">
+    <a href="index.html" class="logo">
+      <i class="fas fa-house-chimney-window" style="color:var(--primary-gold);"></i> PropertyHub
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="feature.html">Features</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="testimonial.html">Testimonials</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="listing.html">Market</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="nav-icon-btn" onclick="openFavPanel()" title="Saved Favourites">
+        <i class="fas fa-heart"></i>
+        <span class="nav-badge" id="fav-badge">0</span>
+      </button>
+      <button class="nav-icon-btn" onclick="openCartPanel()" title="Cart">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="nav-badge" id="cart-badge">0</span>
+      </button>
+      <a href="listing.html" class="btn-gold btn-sm" style="text-decoration:none;">Browse Market</a>
+    </div>
+    <div class="hamburger" id="hamburger" role="button" tabindex="0" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════
+       HERO BANNER
+  ══════════════════════════════════════ -->
+  <section class="hero-banner">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-left animate">
+          <div class="hero-eyebrow">
+            <span></span> Live Market Intelligence
+          </div>
+          <h1 class="hero-title">
+            Your <span class="accent">Dream Property</span><br>
+            Starts Here.
+          </h1>
+          <p class="hero-subtitle">
+            Browse verified listings, use AI-powered search tools, check real-time distances,
+            and close deals with blockchain-secured contracts — all in one place.
+          </p>
+          <div class="hero-actions">
+            <a href="#properties" class="btn-gold"><i class="fas fa-search"></i> Explore Listings</a>
+            <a href="#map-section" class="btn-outline"><i class="fas fa-map-location-dot"></i> Distance Finder</a>
+          </div>
+        </div>
+        <div class="hero-right animate" style="animation-delay:0.2s;">
+          <div class="stat-card">
+            <div class="stat-number" id="count-props">0</div>
+            <div class="stat-label">Active Listings</div>
+            <div class="stat-change"><i class="fas fa-arrow-trend-up"></i> +12% this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="count-sold">0</div>
+            <div class="stat-label">Properties Sold</div>
+            <div class="stat-change"><i class="fas fa-arrow-trend-up"></i> +8% this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">₨<span id="count-avg">0</span>M</div>
+            <div class="stat-label">Avg. Property Value</div>
+            <div class="stat-change"><i class="fas fa-circle-check" style="color:var(--primary-gold)"></i> Market stable</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="count-clients">0</div>
+            <div class="stat-label">Happy Clients</div>
+            <div class="stat-change"><i class="fas fa-arrow-trend-up"></i> +21% this year</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       SMART SEARCH
+  ══════════════════════════════════════ -->
+  <section class="search-section" id="search">
+    <div class="container">
+      <div class="search-glass reveal">
+        <div class="section-header" style="margin-bottom:24px;">
+          <div>
+            <div class="section-title" style="font-size:1.3rem;">Smart Property Search</div>
+            <div class="section-sub">Filter listings by location, type, and budget in real-time</div>
+          </div>
+        </div>
+        <div class="search-row">
+          <div class="search-field">
+            <label><i class="fas fa-map-pin"></i> &nbsp;Location</label>
+            <input type="text" id="search-location" placeholder="e.g. Thamel, Kathmandu" oninput="filterProperties()">
+          </div>
+          <div class="search-field">
+            <label><i class="fas fa-building"></i> &nbsp;Property Type</label>
+            <select id="search-type" onchange="filterProperties()">
+              <option value="">All Types</option>
+              <option value="apartment">Apartment</option>
+              <option value="house">House</option>
+              <option value="villa">Villa</option>
+              <option value="land">Land</option>
+              <option value="commercial">Commercial</option>
+            </select>
+          </div>
+          <div class="search-field">
+            <label><i class="fas fa-tag"></i> &nbsp;Listing Type</label>
+            <select id="search-listing" onchange="filterProperties()">
+              <option value="">Buy or Rent</option>
+              <option value="buy">For Sale</option>
+              <option value="rent">For Rent</option>
+            </select>
+          </div>
+          <div class="search-field">
+            <button class="btn-gold" style="width:100%;justify-content:center;padding:12px 20px;" onclick="filterProperties()">
+              <i class="fas fa-magnifying-glass"></i> Search
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       PROPERTY LISTINGS
+  ══════════════════════════════════════ -->
+  <section class="properties-section" id="properties">
+    <div class="container">
+      <div class="section-header reveal">
+        <div>
+          <div class="section-title">Featured <span>Listings</span></div>
+          <div class="gold-divider"></div>
+          <div class="section-sub">Hand-picked verified properties across Kathmandu Valley</div>
+        </div>
+        <a href="listing.html" class="btn-outline btn-sm" style="flex-shrink:0;">
+          View All <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+      <div class="property-grid" id="property-grid">
+        <!-- Cards injected by JS -->
+      </div>
+      <div id="no-results" style="display:none;text-align:center;padding:60px 20px;color:var(--text-dim);">
+        <i class="fas fa-house-circle-xmark" style="font-size:3rem;color:rgba(197,160,89,0.2);display:block;margin-bottom:16px;"></i>
+        No properties match your search. Try adjusting the filters.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       SMART FEATURES
+  ══════════════════════════════════════ -->
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div>
+          <div class="section-title">Why <span>PropertyHub</span></div>
+          <div class="gold-divider"></div>
+          <div class="section-sub">Built for the modern property buyer and investor</div>
+        </div>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal" style="transition-delay:0.05s;">
+          <div class="feature-icon"><i class="fas fa-brain"></i></div>
+          <h3>AI Price Estimator</h3>
+          <p>Get instant AI-powered property valuations based on location, size, and current market trends.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.1s;">
+          <div class="feature-icon"><i class="fas fa-link"></i></div>
+          <h3>Blockchain Contracts</h3>
+          <p>Every agreement is secured on an immutable ledger — no forgeries, no disputes, no middlemen.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.15s;">
+          <div class="feature-icon"><i class="fas fa-fingerprint"></i></div>
+          <h3>Biometric Verification</h3>
+          <p>Identity-verified buyers and sellers only. Trade with complete peace of mind.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.2s;">
+          <div class="feature-icon"><i class="fas fa-map-location-dot"></i></div>
+          <h3>Interactive Proximity Maps</h3>
+          <p>Instantly see schools, hospitals, transport links, and amenities near any listing.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.25s;">
+          <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Live Market Analytics</h3>
+          <p>Track price history, neighbourhood trends, and investment outlook with live data dashboards.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.3s;">
+          <div class="feature-icon"><i class="fas fa-file-signature"></i></div>
+          <h3>Digital Closing</h3>
+          <p>E-sign rental and purchase agreements in minutes — from anywhere in the world.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       DISTANCE FINDER MAP
+  ══════════════════════════════════════ -->
+  <section class="map-section" id="map-section">
+    <div class="container">
+      <div class="map-wrapper reveal">
+        <div class="map-header">
+          <div class="map-header-left">
+            <h2><i class="fas fa-route" style="color:var(--primary-gold);margin-right:10px;"></i>Property Distance Finder</h2>
+            <p>Calculate real-world distance between your location and any listed property</p>
+          </div>
+          <button class="btn-outline btn-sm" onclick="resetMap()">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+        <div class="map-body">
+          <!-- Controls -->
+          <div class="map-controls">
+
+            <!-- Step 1: Your Location -->
+            <div class="control-group">
+              <label><i class="fas fa-location-crosshairs" style="color:var(--primary-gold);"></i> &nbsp;Your Location</label>
+              <button class="locate-btn" id="locate-btn" onclick="getUserLocation()">
+                <i class="fas fa-crosshairs"></i> Detect My Location
+              </button>
+              <p class="locate-status" id="locate-status">Click to auto-detect your coordinates</p>
+            </div>
+
+            <div class="control-group">
+              <label>Or Enter Manually</label>
+              <input type="text" id="user-address" placeholder="e.g. Thamel, Kathmandu" style="margin-bottom:8px;">
+              <button class="btn-gold" style="width:100%;justify-content:center;padding:10px;" onclick="geocodeUserAddress()">
+                <i class="fas fa-search-location"></i> Find Location
+              </button>
+            </div>
+
+            <!-- Step 2: Select Property -->
+            <div class="control-group">
+              <label><i class="fas fa-house" style="color:var(--primary-gold);"></i> &nbsp;Select Property</label>
+              <div class="property-select-cards" id="prop-select-list">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+
+            <!-- Step 3: Travel Mode -->
+            <div class="control-group">
+              <label><i class="fas fa-car" style="color:var(--primary-gold);"></i> &nbsp;Travel Mode</label>
+              <select id="travel-mode">
+                <option value="driving">🚗 Driving</option>
+                <option value="walking">🚶 Walking</option>
+                <option value="bicycling">🚲 Cycling</option>
+                <option value="transit">🚌 Public Transit</option>
+              </select>
+            </div>
+
+            <!-- Calculate Button -->
+            <button class="btn-gold" style="width:100%;justify-content:center;padding:13px;" onclick="calculateDistance()">
+              <i class="fas fa-calculator"></i> Calculate Distance
+            </button>
+
+            <!-- Result Box -->
+            <div class="distance-result-box" id="dist-result">
+              <h4><i class="fas fa-route"></i> Distance Result</h4>
+              <div class="distance-value" id="dist-km">—</div>
+              <div class="distance-sub" id="dist-from-to">From your location to selected property</div>
+              <div class="distance-breakdown">
+                <div class="dist-item">
+                  <div class="dist-item-label">Straight Line</div>
+                  <div class="dist-item-value"><i class="fas fa-ruler-horizontal"></i><span id="dist-straight">—</span></div>
+                </div>
+                <div class="dist-item">
+                  <div class="dist-item-label">Est. Drive Time</div>
+                  <div class="dist-item-value"><i class="fas fa-clock"></i><span id="dist-time">—</span></div>
+                </div>
+                <div class="dist-item">
+                  <div class="dist-item-label">Travel Mode</div>
+                  <div class="dist-item-value"><i class="fas fa-car"></i><span id="dist-mode">Driving</span></div>
+                </div>
+                <div class="dist-item">
+                  <div class="dist-item-label">Property</div>
+                  <div class="dist-item-value" style="font-size:0.78rem;"><i class="fas fa-building"></i><span id="dist-prop-name">—</span></div>
+                </div>
+              </div>
+              <a id="open-maps-link" href="#" target="_blank" class="btn-gold" style="display:flex;justify-content:center;margin-top:14px;text-decoration:none;padding:11px;">
+                <i class="fas fa-map"></i> Open in Google Maps
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Map Frame -->
+          <div class="map-frame">
+            <div class="map-overlay-msg" id="map-overlay">
+              <i class="fas fa-map-location-dot"></i>
+              <strong style="color:#fff;font-size:1rem;">Distance Finder Map</strong>
+              <span>Detect your location and select a property<br>to view the route on the map.</span>
+            </div>
+            <iframe id="map-iframe" title="Property Map" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       TESTIMONIALS
+  ══════════════════════════════════════ -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div>
+          <div class="section-title">Client <span>Stories</span></div>
+          <div class="gold-divider"></div>
+          <div class="section-sub">Trusted by hundreds of homeowners and investors across Nepal</div>
+        </div>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal">
+          <div class="stars">★★★★★</div>
+          <p class="testimonial-text">"Found my dream apartment in Lazimpat within a week. The blockchain contract gave me complete confidence — no paperwork hassles at all."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">AR</div>
+            <div>
+              <div class="author-name">Anita Rai</div>
+              <div class="author-role">Homeowner, Lazimpat</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:0.15s;">
+          <div class="stars">★★★★★</div>
+          <p class="testimonial-text">"The distance finder tool was a game changer. I could instantly see which properties were within walking distance of my kids' school."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">SK</div>
+            <div>
+              <div class="author-name">Sanjay KC</div>
+              <div class="author-role">Buyer, Patan</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:0.3s;">
+          <div class="stars">★★★★★</div>
+          <p class="testimonial-text">"As an investor, the live market analytics here are unmatched in Nepal. I track 12 properties and my portfolio has grown 30% in a year."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">PM</div>
+            <div>
+              <div class="author-name">Priya Maharjan</div>
+              <div class="author-role">Property Investor, Bhaktapur</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       CTA
+  ══════════════════════════════════════ -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-banner reveal">
+        <div class="cta-left">
+          <h2>Ready to Find Your <span style="color:var(--primary-gold);">Perfect Home?</span></h2>
+          <p>Join thousands of satisfied clients. Start exploring verified listings today.</p>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+          <a href="listing.html" class="btn-gold"><i class="fas fa-search"></i> Browse Listings</a>
+          <a href="contact.html" class="btn-outline"><i class="fas fa-phone"></i> Talk to an Agent</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="op">
+    <p>&copy; 2026 <span>PropertyHub</span> Kathmandu. Developed by Nishan, Bigyan, Santosh, Dipshan and Nibesh.</p>
+  </footer>
+
+</div><!-- end .page-wrapper -->
+
+<script>
+/* ═══════════════════════════════════════
+   DATA — Properties
+═══════════════════════════════════════ */
+const PROPERTIES = [
+  {
+    id: 1, title: "Modern Apartment – Thamel",
+    location: "Thamel, Kathmandu", type: "apartment", listing: "rent",
+    price: "₨ 35,000", priceNote: "/month",
+    beds: 2, baths: 1, sqft: "850 sqft",
+    lat: 27.7152, lng: 85.3123,
+    icon: "fa-building"
+  },
+  {
+    id: 2, title: "Luxury Villa – Maharajgunj",
+    location: "Maharajgunj, Kathmandu", type: "villa", listing: "buy",
+    price: "₨ 4.2 Cr", priceNote: "",
+    beds: 5, baths: 4, sqft: "3,200 sqft",
+    lat: 27.7385, lng: 85.3308,
+    icon: "fa-house-chimney"
+  },
+  {
+    id: 3, title: "Commercial Space – New Baneshwor",
+    location: "New Baneshwor, Kathmandu", type: "commercial", listing: "rent",
+    price: "₨ 90,000", priceNote: "/month",
+    beds: 0, baths: 2, sqft: "1,800 sqft",
+    lat: 27.6962, lng: 85.3407,
+    icon: "fa-store"
+  },
+  {
+    id: 4, title: "Cosy House – Patan",
+    location: "Lagankhel, Patan", type: "house", listing: "buy",
+    price: "₨ 1.8 Cr", priceNote: "",
+    beds: 3, baths: 2, sqft: "1,500 sqft",
+    lat: 27.6644, lng: 85.3175,
+    icon: "fa-house"
+  },
+  {
+    id: 5, title: "Studio Flat – Naxal",
+    location: "Naxal, Kathmandu", type: "apartment", listing: "rent",
+    price: "₨ 22,000", priceNote: "/month",
+    beds: 1, baths: 1, sqft: "480 sqft",
+    lat: 27.7234, lng: 85.3256,
+    icon: "fa-building"
+  },
+  {
+    id: 6, title: "Residential Land – Bhaktapur",
+    location: "Suryabinayak, Bhaktapur", type: "land", listing: "buy",
+    price: "₨ 55 Lakh", priceNote: "/aana",
+    beds: 0, baths: 0, sqft: "4 Aana",
+    lat: 27.6717, lng: 85.4298,
+    icon: "fa-map"
+  }
+];
+
+let cart = [], favs = [];
+let userLat = null, userLng = null;
+let selectedPropId = null;
+
+/* ═══════════════════════════════════════
+   RENDER PROPERTIES
+═══════════════════════════════════════ */
+function renderProperties(list) {
+  const grid = document.getElementById('property-grid');
+  const none = document.getElementById('no-results');
+  grid.innerHTML = '';
+  if (list.length === 0) {
+    none.style.display = '';
+    return;
+  }
+  none.style.display = 'none';
+  list.forEach((p, i) => {
+    const inFav = favs.some(f => f.id === p.id);
+    const inCart = cart.some(c => c.id === p.id);
+    const badgeClass = p.listing === 'rent' ? 'rent' : '';
+    const badgeLabel = p.listing === 'rent' ? 'For Rent' : 'For Sale';
+    const specsHtml = [
+      p.beds > 0 ? `<div class="spec"><i class="fas fa-bed"></i> ${p.beds} Bed</div>` : '',
+      p.baths > 0 ? `<div class="spec"><i class="fas fa-shower"></i> ${p.baths} Bath</div>` : '',
+      p.sqft ? `<div class="spec"><i class="fas fa-ruler-combined"></i> ${p.sqft}</div>` : ''
+    ].join('');
+
+    const card = document.createElement('div');
+    card.className = 'property-card';
+    card.style.animationDelay = (i * 0.1 + 0.1) + 's';
+    card.innerHTML = `
+      <div class="card-image">
+        <div class="img-placeholder"><i class="fas ${p.icon}"></i></div>
+        <span class="card-badge ${badgeClass}">${badgeLabel}</span>
+        <div class="card-actions-top">
+          <button class="card-action-btn ${inFav ? 'active' : ''}" onclick="toggleFav(${p.id},this)" title="Save">
+            <i class="fas fa-heart"></i>
+          </button>
+          <button class="card-action-btn" onclick="selectForMap(${p.id})" title="View on map">
+            <i class="fas fa-map-pin"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-location"><i class="fas fa-location-dot"></i>${p.location}</div>
+        <div class="card-title">${p.title}</div>
+        <div class="card-specs">${specsHtml}</div>
+        <div class="card-footer">
+          <div class="card-price">${p.price}<span>${p.priceNote}</span></div>
+          <div class="card-cta-row">
+            <button class="btn-gold btn-sm" onclick="addToCart(${p.id})">
+              <i class="fas fa-${inCart ? 'check' : 'plus'}"></i>
+            </button>
+            <button class="btn-outline btn-sm" onclick="selectForMap(${p.id});document.getElementById('map-section').scrollIntoView({behavior:'smooth'})">
+              <i class="fas fa-route"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Refresh map selector
+  renderMapPropertyList();
+}
+
+function filterProperties() {
+  const loc = document.getElementById('search-location').value.toLowerCase();
+  const type = document.getElementById('search-type').value;
+  const listing = document.getElementById('search-listing').value;
+  const filtered = PROPERTIES.filter(p => {
+    const matchLoc = !loc || p.location.toLowerCase().includes(loc) || p.title.toLowerCase().includes(loc);
+    const matchType = !type || p.type === type;
+    const matchListing = !listing || p.listing === listing;
+    return matchLoc && matchType && matchListing;
+  });
+  renderProperties(filtered);
+}
+
+/* ═══════════════════════════════════════
+   CART & FAVOURITES
+═══════════════════════════════════════ */
+function addToCart(id) {
+  const p = PROPERTIES.find(x => x.id === id);
+  if (!p) return;
+  if (cart.some(c => c.id === id)) { showToast('Already in cart!'); return; }
+  cart.push(p);
+  updateBadge('cart-badge', cart.length);
+  renderCartPanel();
+  showToast('Added to cart!');
+  filterProperties(); // re-render cards
+}
+
+function toggleFav(id, btn) {
+  const p = PROPERTIES.find(x => x.id === id);
+  if (!p) return;
+  const idx = favs.findIndex(f => f.id === id);
+  if (idx > -1) {
+    favs.splice(idx, 1);
+    btn.classList.remove('active');
+    showToast('Removed from favourites');
+  } else {
+    favs.push(p);
+    btn.classList.add('active');
+    showToast('Saved to favourites!');
+  }
+  updateBadge('fav-badge', favs.length);
+  renderFavPanel();
+}
+
+function updateBadge(id, count) {
+  const b = document.getElementById(id);
+  b.textContent = count;
+  b.classList.toggle('visible', count > 0);
+}
+
+function renderCartPanel() {
+  const body = document.getElementById('cart-body');
+  const footer = document.getElementById('cart-footer');
+  body.querySelectorAll('.panel-item').forEach(el => el.remove());
+  if (cart.length === 0) {
+    document.getElementById('cart-empty').style.display = '';
+    footer.style.display = 'none';
+  } else {
+    document.getElementById('cart-empty').style.display = 'none';
+    footer.style.display = '';
+    cart.forEach((item, i) => {
+      const el = document.createElement('div');
+      el.className = 'panel-item';
+      el.innerHTML = `<div class="panel-item-img" style="display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:rgba(197,160,89,0.4);"><i class="fas ${item.icon}"></i></div><div class="panel-item-info"><h4>${item.title}</h4><span>${item.price}</span></div><button class="panel-item-remove" onclick="removeFromCart(${i})"><i class="fas fa-trash-can"></i></button>`;
+      body.appendChild(el);
+    });
+    document.getElementById('cart-count-label').textContent = cart.length + ' propert' + (cart.length === 1 ? 'y' : 'ies');
+  }
+}
+
+function renderFavPanel() {
+  const body = document.getElementById('fav-body');
+  body.querySelectorAll('.panel-item').forEach(el => el.remove());
+  if (favs.length === 0) {
+    document.getElementById('fav-empty').style.display = '';
+  } else {
+    document.getElementById('fav-empty').style.display = 'none';
+    favs.forEach((item, i) => {
+      const el = document.createElement('div');
+      el.className = 'panel-item';
+      el.innerHTML = `<div class="panel-item-img" style="display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:rgba(197,160,89,0.4);"><i class="fas ${item.icon}"></i></div><div class="panel-item-info"><h4>${item.title}</h4><span>${item.price}</span></div><button class="panel-item-remove" onclick="removeFromFav(${i})"><i class="fas fa-trash-can"></i></button>`;
+      body.appendChild(el);
+    });
+  }
+}
+
+function removeFromCart(i) { cart.splice(i, 1); renderCartPanel(); updateBadge('cart-badge', cart.length); filterProperties(); }
+function removeFromFav(i) { favs.splice(i, 1); renderFavPanel(); updateBadge('fav-badge', favs.length); filterProperties(); }
+
+function openFavPanel() {
+  document.getElementById('fav-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function openCartPanel() {
+  document.getElementById('cart-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closePanels() {
+  document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('open'));
+  document.getElementById('overlay').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanels(); });
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ═══════════════════════════════════════
+   ANIMATED COUNTERS
+═══════════════════════════════════════ */
+function animateCount(id, target, prefix='', suffix='') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let current = 0;
+  const step = Math.ceil(target / 60);
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = prefix + current.toLocaleString() + suffix;
+    if (current >= target) clearInterval(timer);
+  }, 25);
+}
+
+/* ═══════════════════════════════════════
+   MAP FEATURE
+═══════════════════════════════════════ */
+function renderMapPropertyList() {
+  const list = document.getElementById('prop-select-list');
+  if (!list) return;
+  list.innerHTML = '';
+  PROPERTIES.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'prop-select-card' + (selectedPropId === p.id ? ' selected' : '');
+    el.dataset.id = p.id;
+    el.innerHTML = `<div class="prop-dot"></div><div class="prop-select-info"><h4>${p.title}</h4><span>${p.location}</span></div>`;
+    el.onclick = () => selectForMap(p.id);
+    list.appendChild(el);
+  });
+}
+
+function selectForMap(id) {
+  selectedPropId = id;
+  renderMapPropertyList();
+  // Highlight cards
+  document.querySelectorAll('.property-card').forEach(c => c.style.borderColor = '');
+  showToast('Property selected for distance calculation');
+}
+
+function getUserLocation() {
+  const btn = document.getElementById('locate-btn');
+  const status = document.getElementById('locate-status');
+  if (!navigator.geolocation) {
+    status.textContent = 'Geolocation not supported by your browser.';
+    status.className = 'locate-status error';
+    return;
+  }
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Detecting...';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      status.textContent = `✓ Located: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
+      status.className = 'locate-status success';
+      btn.innerHTML = '<i class="fas fa-check"></i> Location Detected';
+      btn.disabled = false;
+      // Show location on map
+      updateMapSrc(userLat, userLng, null, null, 'satellite');
+      showToast('Location detected successfully!');
+    },
+    (err) => {
+      status.textContent = 'Could not detect location. Please enter manually.';
+      status.className = 'locate-status error';
+      btn.innerHTML = '<i class="fas fa-crosshairs"></i> Detect My Location';
+      btn.disabled = false;
+    }
+  );
+}
+
+function geocodeUserAddress() {
+  const addr = document.getElementById('user-address').value.trim();
+  if (!addr) { showToast('Please enter an address'); return; }
+  // Use OpenStreetMap Nominatim (free, no key needed)
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr + ', Nepal')}&format=json&limit=1`;
+  const status = document.getElementById('locate-status');
+  status.textContent = 'Searching…';
+  status.className = 'locate-status';
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.length > 0) {
+        userLat = parseFloat(data[0].lat);
+        userLng = parseFloat(data[0].lon);
+        status.textContent = `✓ Found: ${data[0].display_name.split(',').slice(0,2).join(',')}`;
+        status.className = 'locate-status success';
+        updateMapSrc(userLat, userLng, null, null, 'satellite');
+        showToast('Location found!');
+      } else {
+        status.textContent = 'Address not found. Try a different search.';
+        status.className = 'locate-status error';
+      }
+    })
+    .catch(() => {
+      // Fallback: use approx coordinates for Kathmandu area
+      status.textContent = 'Search failed. Using Kathmandu as base.';
+      status.className = 'locate-status error';
+      userLat = 27.7172;
+      userLng = 85.3240;
+    });
+}
+
+function toRad(val) { return val * Math.PI / 180; }
+
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // km
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*
+            Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function estimateTime(distKm, mode) {
+  const speeds = { driving: 30, walking: 5, bicycling: 15, transit: 20 };
+  const spd = speeds[mode] || 30;
+  const mins = Math.round((distKm / spd) * 60);
+  if (mins < 60) return mins + ' min';
+  const h = Math.floor(mins/60), m = mins%60;
+  return h + 'h ' + (m > 0 ? m + 'm' : '');
+}
+
+function calculateDistance() {
+  if (userLat === null || userLng === null) {
+    showToast('Please detect or enter your location first');
+    return;
+  }
+  if (!selectedPropId) {
+    showToast('Please select a property from the list');
+    return;
+  }
+  const prop = PROPERTIES.find(p => p.id === selectedPropId);
+  if (!prop) return;
+
+  const dist = haversineDistance(userLat, userLng, prop.lat, prop.lng);
+  const mode = document.getElementById('travel-mode').value;
+  const roadMultiplier = { driving: 1.3, walking: 1.2, bicycling: 1.25, transit: 1.4 };
+  const roadDist = dist * (roadMultiplier[mode] || 1.3);
+  const modeLabels = { driving: '🚗 Driving', walking: '🚶 Walking', bicycling: '🚲 Cycling', transit: '🚌 Transit' };
+
+  document.getElementById('dist-km').textContent = roadDist.toFixed(2) + ' km';
+  document.getElementById('dist-straight').textContent = dist.toFixed(2) + ' km';
+  document.getElementById('dist-time').textContent = estimateTime(roadDist, mode);
+  document.getElementById('dist-mode').textContent = modeLabels[mode];
+  document.getElementById('dist-prop-name').textContent = prop.title.split('–')[0].trim();
+  document.getElementById('dist-from-to').textContent = `Your location → ${prop.location}`;
+
+  // Google Maps directions link
+  const gmLink = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${prop.lat},${prop.lng}&travelmode=${mode}`;
+  document.getElementById('open-maps-link').href = gmLink;
+
+  document.getElementById('dist-result').classList.add('show');
+
+  // Show route on OpenStreetMap
+  updateMapSrc(userLat, userLng, prop.lat, prop.lng, 'route');
+
+  showToast(`Distance: ${roadDist.toFixed(2)} km (${estimateTime(roadDist, mode)})`);
+}
+
+function updateMapSrc(lat1, lng1, lat2, lng2, mode) {
+  const iframe = document.getElementById('map-iframe');
+  const overlay = document.getElementById('map-overlay');
+
+  let src;
+  if (mode === 'route' && lat2 !== null) {
+    // OpenStreetMap with both markers
+    const minLat = Math.min(lat1,lat2) - 0.01;
+    const maxLat = Math.max(lat1,lat2) + 0.01;
+    const minLng = Math.min(lng1,lng2) - 0.01;
+    const maxLng = Math.max(lng1,lng2) + 0.01;
+    src = `https://www.openstreetmap.org/export/embed.html?bbox=${minLng}%2C${minLat}%2C${maxLng}%2C${maxLat}&layer=mapnik&marker=${lat1}%2C${lng1}`;
+  } else {
+    // Just show user location
+    src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng1-0.02}%2C${lat1-0.015}%2C${lng1+0.02}%2C${lat1+0.015}&layer=mapnik&marker=${lat1}%2C${lng1}`;
+  }
+
+  iframe.src = src;
+  overlay.classList.add('hidden');
+}
+
+function resetMap() {
+  userLat = null; userLng = null; selectedPropId = null;
+  document.getElementById('locate-status').textContent = 'Click to auto-detect your coordinates';
+  document.getElementById('locate-status').className = 'locate-status';
+  document.getElementById('locate-btn').innerHTML = '<i class="fas fa-crosshairs"></i> Detect My Location';
+  document.getElementById('locate-btn').disabled = false;
+  document.getElementById('user-address').value = '';
+  document.getElementById('dist-result').classList.remove('show');
+  document.getElementById('map-iframe').src = '';
+  document.getElementById('map-overlay').classList.remove('hidden');
+  renderMapPropertyList();
+  showToast('Map reset');
+}
+
+/* ═══════════════════════════════════════
+   NAV SCROLL
+═══════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+  document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+/* ═══════════════════════════════════════
+   HAMBURGER
+═══════════════════════════════════════ */
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('navLinks');
+function toggleMenu() {
+  hamburger.classList.toggle('open');
+  navLinks.classList.toggle('mobile-active');
+}
+hamburger.addEventListener('click', toggleMenu);
+hamburger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }});
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => {
+    hamburger.classList.remove('open');
+    navLinks.classList.remove('mobile-active');
+  });
+});
+document.addEventListener('click', e => {
+  if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+    hamburger.classList.remove('open');
+    navLinks.classList.remove('mobile-active');
+  }
+});
+
+/* ═══════════════════════════════════════
+   SCROLL REVEAL
+═══════════════════════════════════════ */
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderProperties(PROPERTIES);
+  renderMapPropertyList();
+  // Animate counters
+  setTimeout(() => {
+    animateCount('count-props', 247);
+    animateCount('count-sold', 1842);
+    animateCount('count-avg', 85);
+    animateCount('count-clients', 3200);
+  }, 600);
+});
+</script>
+</body>
+</html>

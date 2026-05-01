@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discovery Engine | PropertyHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* ── CSS VARIABLES ── */
+        :root {
+            --nav-height: 70px;
+            --primary-gold: #c5a059;
+            --glass-bg: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.08);
+            --text-dim: rgba(255,255,255,0.55);
+            --transition: all 0.3s ease;
+            --bg: #0b0d17;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* ── NAVBAR ── */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5%;
+            height: var(--nav-height);
+            background: rgba(11,13,23,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+        nav.scrolled {
+            background: rgba(11,13,23,0.98);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+        }
+
+        /* ── LOGO: matches index.html exactly ── */
+        .logo {
+            text-decoration: none;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            z-index: 1001;
+        }
+
+        .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            transition: 0.3s;
+            padding: 6px 0;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 0; height: 2px;
+            background: var(--primary-gold);
+            transition: width 0.3s ease;
+        }
+        .nav-links a:hover::after,
+        .nav-links a.active::after { width: 100%; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary-gold); }
+
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
+        .nav-icon-btn {
+            position: relative;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        .nav-icon-btn:hover {
+            border-color: var(--primary-gold);
+            color: var(--primary-gold);
+            background: rgba(197,160,89,0.08);
+        }
+        .nav-badge {
+            position: absolute;
+            top: -6px; right: -6px;
+            background: var(--primary-gold);
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: bold;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: scale(0);
+            transition: 0.2s ease;
+        }
+        .nav-badge.visible { opacity: 1; transform: scale(1); }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--primary-gold), #a8874a);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-gold:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+        /* ── HAMBURGER ── */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+            flex-shrink: 0;
+        }
+        .hamburger span {
+            display: block;
+            width: 24px; height: 2px;
+            background: var(--text-dim);
+            border-radius: 2px;
+            transition: 0.3s ease;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: var(--primary-gold); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--primary-gold); }
+
+        /* ── SIDE PANELS ── */
+        .side-panel-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .side-panel-overlay.open { opacity: 1; pointer-events: all; }
+
+        .side-panel {
+            position: fixed;
+            top: 0; right: -420px;
+            width: min(400px, 92vw);
+            height: 100vh;
+            background: #10121e;
+            border-left: 1px solid var(--glass-border);
+            z-index: 2001;
+            transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .side-panel.open { right: 0; }
+        .side-panel-header {
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(197,160,89,0.04);
+        }
+        .side-panel-header h3 { color: var(--primary-gold); font-size: 1.05rem; letter-spacing: 0.5px; }
+        .close-panel {
+            background: none; border: none; color: var(--text-dim);
+            font-size: 1.2rem; cursor: pointer; transition: 0.2s; padding: 5px;
+        }
+        .close-panel:hover { color: #fff; }
+
+        .side-panel-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+        .side-panel-body::-webkit-scrollbar { width: 4px; }
+        .side-panel-body::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
+        .panel-empty { text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 0.9rem; }
+        .panel-empty i { font-size: 3rem; color: rgba(197,160,89,0.2); display: block; margin-bottom: 15px; }
+
+        .panel-item {
+            display: flex; align-items: center; gap: 14px;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 14px; padding: 14px; margin-bottom: 12px; transition: 0.2s;
+        }
+        .panel-item:hover { border-color: var(--primary-gold); }
+        .panel-item-img {
+            width: 54px; height: 54px; border-radius: 10px;
+            background: url('rental.png') center/cover var(--glass-bg);
+            flex-shrink: 0;
+        }
+        .panel-item-info { flex: 1; min-width: 0; }
+        .panel-item-info h4 { font-size: 0.88rem; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .panel-item-info span { font-size: 0.8rem; color: var(--primary-gold); font-weight: bold; }
+        .panel-item-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.85rem; transition: 0.2s; padding: 5px; }
+        .panel-item-remove:hover { color: #ff6b6b; }
+
+        .side-panel-footer { padding: 20px 24px; border-top: 1px solid var(--glass-border); }
+        .panel-total { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; color: var(--text-dim); }
+        .panel-total strong { color: var(--primary-gold); font-size: 1rem; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom: 28px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1a1f30; border: 1px solid var(--primary-gold);
+            color: #fff; padding: 12px 22px; border-radius: 12px;
+            font-size: 0.88rem; z-index: 9999;
+            opacity: 0; transition: 0.3s;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .toast i { color: var(--primary-gold); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ── CONTAINER ── */
+        /* ── PAGE WRAPPER: matches index.html background exactly ── */
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(rgba(11, 13, 23, 0.8), rgba(11, 13, 23, 0.95)),
+                        url('future.png') center/cover no-repeat fixed;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; width: 100%; }
+
+        /* ── ANIMATE ── */
+        .animate { animation: fadeUp 0.55s ease both; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── MARKET HEADER ── */
+        .market-header {
+            padding: calc(var(--nav-height) + 50px) 0 30px;
+            text-align: center;
+        }
+        .market-header h4 {
+            color: var(--primary-gold);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+        .market-header h1 {
+            color: #fff;
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 8px;
+        }
+        .market-header p { color: var(--text-dim); font-size: 0.95rem; }
+
+        /* ── NAVIGATION CARDS ── */
+        .property-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 80px;
+        }
+        .property-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+        .property-card:hover {
+            border-color: var(--primary-gold);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(197,160,89,0.12);
+        }
+        .thumb {
+            height: 200px;
+            background: url('rental.png') center/cover;
+            position: relative;
+        }
+        .category-badge {
+            position: absolute; top: 15px; left: 15px;
+            background: var(--primary-gold); color: #000;
+            padding: 5px 14px; border-radius: 8px;
+            font-size: 0.72rem; font-weight: bold; text-transform: uppercase;
+        }
+        .info { padding: 22px; }
+        .info h3 { margin-bottom: 6px; font-size: 1rem; }
+        .info p { color: var(--text-dim); font-size: 0.86rem; }
+        .price-tag {
+            font-size: 0.92rem; color: var(--primary-gold);
+            font-weight: bold; margin-top: 12px; display: block;
+        }
+
+        /* ── SECTION PANEL ── */
+        .section-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 56px 44px;
+            border-radius: 30px;
+            margin: 80px 0;
+            scroll-margin-top: calc(var(--nav-height) + 16px);
+            position: relative;
+            overflow: hidden;
+        }
+        .section-panel-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .section-panel-header h2 {
+            color: var(--primary-gold);
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .section-panel-header p { color: var(--text-dim); margin-top: 10px; font-size: 0.9rem; }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            display: flex; gap: 10px; flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+        .filter-pill {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            color: var(--text-dim); padding: 8px 18px; border-radius: 25px;
+            font-size: 0.8rem; cursor: pointer; transition: 0.2s;
+            white-space: nowrap;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            border-color: var(--primary-gold);
+            color: var(--primary-gold);
+            background: rgba(197,160,89,0.08);
+        }
+
+        /* ── MARKET GRID & CARDS ── */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 26px;
+        }
+        .market-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .market-card:hover {
+            border-color: rgba(197,160,89,0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .market-card-img {
+            height: 210px;
+            background: url('download.jpg') center/cover;
+            position: relative;
+        }
+        .card-badge-left {
+            position: absolute; top: 14px; left: 14px;
+            padding: 4px 12px; border-radius: 6px;
+            font-weight: bold; font-size: 0.7rem;
+        }
+        .card-badge-right {
+            position: absolute; top: 14px; right: 14px;
+            background: rgba(11,13,23,0.7); color: #fff;
+            padding: 4px 10px; border-radius: 6px;
+            font-size: 0.7rem; backdrop-filter: blur(5px);
+        }
+        .market-card-body { padding: 20px; }
+        .market-card-price { color: var(--primary-gold); font-size: 1.4rem; font-weight: bold; }
+        .market-card-title { font-size: 0.98rem; font-weight: 600; margin: 8px 0 4px; color: #fff; }
+        .market-card-loc { color: var(--text-dim); font-size: 0.83rem; }
+        .market-card-specs {
+            display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0;
+            padding: 12px 0; border-top: 1px solid var(--glass-border);
+            font-size: 0.79rem; color: var(--text-dim);
+        }
+        .market-card-specs span { display: flex; align-items: center; gap: 5px; }
+        .market-card-specs i { color: var(--primary-gold); font-size: 0.73rem; }
+
+        .card-actions { display: flex; gap: 10px; margin-top: 14px; }
+        .btn-cart {
+            flex: 1;
+            background: var(--primary-gold);
+            color: #000; border: none;
+            padding: 11px 8px; border-radius: 10px;
+            font-weight: bold; font-size: 0.82rem;
+            cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+        }
+        .btn-cart:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(197,160,89,0.3); }
+        .btn-cart.in-cart {
+            background: rgba(197,160,89,0.15);
+            color: var(--primary-gold);
+            border: 1px solid var(--primary-gold);
+        }
+        .btn-fav {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            color: var(--text-dim); width: 44px; height: 44px;
+            border-radius: 10px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; flex-shrink: 0;
+        }
+        .btn-fav:hover { border-color: #ff6b8a; color: #ff6b8a; }
+        .btn-fav.active { border-color: #ff6b8a; color: #ff6b8a; background: rgba(255,107,138,0.08); }
+
+        /* ── SUBMISSION DESK ── */
+        .submission-bg-decor {
+            position: absolute; top: -60px; right: -60px;
+            font-size: 20rem; color: rgba(197,160,89,0.03);
+            transform: rotate(-15deg); z-index: 0;
+            pointer-events: none;
+        }
+        .submission-inner { position: relative; z-index: 1; }
+
+        .verify-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(197,160,89,0.08); border: 1px solid rgba(197,160,89,0.2);
+            padding: 8px 16px; border-radius: 25px;
+            color: var(--primary-gold); font-size: 0.8rem; font-weight: 500;
+        }
+
+        /* Step Progress */
+        .step-progress { height: 3px; background: var(--glass-border); border-radius: 3px; margin-bottom: 32px; overflow: hidden; }
+        .step-progress-fill { height: 100%; background: var(--primary-gold); border-radius: 3px; transition: width 0.5s ease; }
+
+        /* Step Tabs */
+        .submission-steps {
+            display: flex; gap: 0; margin-bottom: 40px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px; overflow: hidden;
+        }
+        .step-tab {
+            flex: 1; padding: 16px 10px; text-align: center;
+            cursor: pointer; transition: 0.3s;
+            border-right: 1px solid var(--glass-border);
+            color: var(--text-dim); font-size: 0.8rem; font-weight: 500;
+            line-height: 1.4;
+        }
+        .step-tab:last-child { border-right: none; }
+        .step-tab.active { background: rgba(197,160,89,0.1); color: var(--primary-gold); }
+        .step-tab i { display: block; font-size: 1.1rem; margin-bottom: 5px; }
+
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group.full { grid-column: span 2; }
+        .form-group label {
+            color: var(--primary-gold); font-size: 0.74rem;
+            text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600;
+        }
+        .form-input {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            padding: 13px 15px; border-radius: 12px;
+            color: #fff; font-size: 0.9rem;
+            transition: 0.3s; width: 100%;
+            font-family: inherit;
+            appearance: none;
+        }
+        .form-input:focus {
+            border-color: var(--primary-gold);
+            outline: none;
+            background: rgba(255,255,255,0.07);
+            box-shadow: 0 0 0 3px rgba(197,160,89,0.08);
+        }
+        .form-input::placeholder { color: rgba(176,176,176,0.45); }
+        select.form-input option { background: #0d0f1e; }
+        textarea.form-input { resize: vertical; min-height: 120px; }
+
+        /* File Drop Zone */
+        .file-drop-zone {
+            height: 170px;
+            border: 2px dashed rgba(197,160,89,0.4);
+            border-radius: 18px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: rgba(197,160,89,0.02);
+            cursor: pointer; transition: 0.3s;
+            color: var(--text-dim); text-align: center;
+            padding: 20px;
+        }
+        .file-drop-zone:hover { border-color: var(--primary-gold); background: rgba(197,160,89,0.05); color: #fff; }
+        .file-drop-zone i { font-size: 2.2rem; color: var(--primary-gold); margin-bottom: 10px; }
+        .file-drop-zone p { font-size: 0.88rem; font-weight: 500; margin-bottom: 4px; }
+        .file-drop-zone small { font-size: 0.74rem; }
+        .file-drop-zone input[type="file"] { display: none; }
+
+        /* Consent row */
+        .form-row-check {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 15px; background: rgba(197,160,89,0.05);
+            border-radius: 12px; border: 1px solid rgba(197,160,89,0.15);
+        }
+        .form-row-check input[type="checkbox"] { margin-top: 3px; accent-color: var(--primary-gold); width: 16px; height: 16px; flex-shrink: 0; }
+        .form-row-check label { color: var(--text-dim); font-size: 0.84rem; line-height: 1.55; cursor: pointer; }
+        .form-row-check label a { color: var(--primary-gold); text-decoration: none; }
+
+        /* Step Navigation */
+        .step-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 32px; padding-top: 24px;
+            border-top: 1px solid var(--glass-border);
+            gap: 12px;
+        }
+        .btn-step-back {
+            background: transparent; color: var(--text-dim);
+            border: 1px solid var(--glass-border);
+            padding: 13px 28px; border-radius: 10px;
+            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.88rem;
+            white-space: nowrap;
+        }
+        .btn-step-back:hover { border-color: var(--primary-gold); color: var(--primary-gold); }
+        .btn-step-next {
+            background: var(--primary-gold); color: #000;
+            border: none; padding: 13px 36px; border-radius: 10px;
+            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.88rem;
+            white-space: nowrap;
+        }
+        .btn-step-next:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(197,160,89,0.3); }
+
+        /* Success State */
+        .submission-success { display: none; text-align: center; padding: 60px 20px; }
+        .submission-success.show { display: block; }
+        .success-check {
+            width: 80px; height: 80px;
+            background: rgba(197,160,89,0.1); border: 2px solid var(--primary-gold);
+            border-radius: 50%; margin: 0 auto 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: var(--primary-gold);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 24px;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            font-size: 0.84rem;
+            margin-top: auto;
+        }
+        footer span { color: var(--primary-gold); }
+
+        /* ════════════════════════════════════════════════════════════
+           RESPONSIVE BREAKPOINTS
+        ════════════════════════════════════════════════════════════ */
+
+        /* Tablet: ≤ 900px */
+        @media (max-width: 900px) {
+            .hamburger { display: flex; }
+            .nav-links {
+                position: fixed;
+                top: var(--nav-height); left: 0; right: 0;
+                flex-direction: column; gap: 0;
+                background: rgba(11,13,23,0.98);
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--glass-border);
+                max-height: 0; overflow: hidden;
+                transition: max-height 0.35s ease, padding 0.35s ease;
+                padding: 0 5%;
+            }
+            .nav-links.mobile-active { max-height: 420px; padding: 12px 5% 20px; }
+            .nav-links li { width: 100%; }
+            .nav-links a {
+                display: block; padding: 13px 0;
+                border-bottom: 1px solid var(--glass-border);
+                font-size: 0.97rem;
+            }
+            .nav-links a::after { display: none; }
+            .nav-links li:last-child a { border-bottom: none; }
+
+            .section-panel { padding: 40px 30px; }
+        }
+
+        /* Small tablet: ≤ 700px */
+        @media (max-width: 700px) {
+            .nav-actions .btn-gold { display: none; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: span 1; }
+
+            .step-tab { font-size: 0; padding: 14px 8px; }
+            .step-tab i { font-size: 1.2rem; margin-bottom: 0; display: block; }
+            .step-tab::after {
+                content: attr(data-label);
+                display: block;
+                font-size: 0.65rem;
+                margin-top: 4px;
+                color: inherit;
+            }
+
+            .property-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+            .thumb { height: 150px; }
+            .info { padding: 16px; }
+            .info h3 { font-size: 0.9rem; }
+
+            .market-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+            .market-card-img { height: 160px; }
+            .market-card-body { padding: 14px; }
+            .market-card-price { font-size: 1.15rem; }
+            .market-card-specs { gap: 8px; font-size: 0.75rem; }
+
+            .section-panel { padding: 32px 22px; border-radius: 22px; }
+            .section-panel-header h2 { letter-spacing: 1px; }
+        }
+
+        /* Mobile: ≤ 560px */
+        @media (max-width: 560px) {
+            :root { --nav-height: 62px; }
+
+            nav { padding: 0 4%; }
+            .container { padding: 0 4%; }
+
+            .property-grid { grid-template-columns: 1fr; gap: 14px; }
+            .thumb { height: 180px; }
+
+            .market-grid { grid-template-columns: 1fr; gap: 16px; }
+            .market-card-img { height: 190px; }
+
+            .section-panel { padding: 28px 18px; border-radius: 18px; margin: 50px 0; }
+
+            .step-nav { flex-wrap: wrap; }
+            .btn-step-back, .btn-step-next { flex: 1; text-align: center; justify-content: center; }
+
+            .filter-bar { gap: 8px; }
+            .filter-pill { padding: 7px 14px; font-size: 0.76rem; }
+
+            .file-drop-zone { height: 140px; }
+
+            .side-panel { width: 100vw; }
+
+            .toast {
+                width: calc(100% - 32px);
+                white-space: normal;
+                text-align: center;
+                left: 50%;
+                bottom: 18px;
+            }
+        }
+
+        /* Small phones: ≤ 380px */
+        @media (max-width: 380px) {
+            .logo { font-size: 0.98rem; }
+            .nav-icon-btn { width: 36px; height: 36px; font-size: 0.82rem; }
+            .market-header h1 { font-size: 1.8rem; }
+            .section-panel { padding: 22px 14px; }
+            .btn-step-back, .btn-step-next { padding: 12px 16px; font-size: 0.82rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- TOAST -->
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toast-msg">Added!</span></div>
+
+    <!-- SIDE PANEL: FAVOURITES -->
+    <div class="side-panel-overlay" id="fav-overlay" onclick="closeFavPanel()"></div>
+    <div class="side-panel" id="fav-panel">
+        <div class="side-panel-header">
+            <h3><i class="fas fa-heart" style="margin-right:8px;"></i>Saved Favourites</h3>
+            <button class="close-panel" onclick="closeFavPanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="side-panel-body" id="fav-body">
+            <div class="panel-empty" id="fav-empty">
+                <i class="fas fa-heart-crack"></i>
+                <p>No favourites yet.</p>
+                <small>Tap the ♡ on any listing to save it here.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDE PANEL: CART -->
+    <div class="side-panel-overlay" id="cart-overlay" onclick="closeCartPanel()"></div>
+    <div class="side-panel" id="cart-panel">
+        <div class="side-panel-header">
+            <h3><i class="fas fa-shopping-bag" style="margin-right:8px;"></i>Your Cart</h3>
+            <button class="close-panel" onclick="closeCartPanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="side-panel-body" id="cart-body">
+            <div class="panel-empty" id="cart-empty">
+                <i class="fas fa-bag-shopping"></i>
+                <p>Your cart is empty.</p>
+                <small>Add a property to schedule a viewing or inquiry.</small>
+            </div>
+        </div>
+        <div class="side-panel-footer" id="cart-footer" style="display:none;">
+            <div class="panel-total">
+                <span>Properties Selected</span>
+                <strong id="cart-count-label">0</strong>
+            </div>
+            <button class="btn-gold" style="width:100%; padding:15px; font-size:0.9rem;">
+                <i class="fas fa-calendar-check"></i> Request Viewing for All
+            </button>
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+        <!-- NAVBAR -->
+        <nav id="mainNav">
+            <a href="index.html" class="logo">
+                <i class="fas fa-house-chimney-window" style="color:var(--primary-gold);"></i> PropertyHub
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="feature.html">Features</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="testimonial.html">Testimonials</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="listing.html" class="active">Market</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="nav-icon-btn" onclick="openFavPanel()" title="Saved Favourites">
+                    <i class="fas fa-heart"></i>
+                    <span class="nav-badge" id="fav-badge">0</span>
+                </button>
+                <button class="nav-icon-btn" onclick="openCartPanel()" title="Cart">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="nav-badge" id="cart-badge">0</span>
+                </button>
+                <a href="#sell-section" class="btn-gold" style="text-decoration:none; padding:0.6rem 1.4rem; font-size:0.86rem;">List Property</a>
+            </div>
+            <div class="hamburger" id="hamburger" aria-label="Toggle navigation menu" role="button" tabindex="0">
+                <span></span><span></span><span></span>
+            </div>
+        </nav>
+
+        <main class="container animate">
+            <!-- Market Header -->
+            <div class="market-header">
+                <h4>Kathmandu & Beyond</h4>
+                <h1>Discovery Engine</h1>
+                <p>Explore, shortlist, and submit your ideal property — all in one place.</p>
+            </div>
+
+            <!-- Navigation Cards -->
+            <div class="property-grid">
+                <a href="#buy-section" class="property-card">
+                    <div class="thumb" style="background-image:url('Residential&Commercial.jpg');"></div>
+                    <div class="info">
+                        <span class="category-badge">Buy Property</span>
+                        <h3 style="margin-top:10px;">Residential & Commercial</h3>
+                        <p>Explore ownership opportunities.</p>
+                        <span class="price-tag">Enter Portal <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+                <a href="#rent-section" class="property-card">
+                    <div class="thumb" style="background-image:url('Hotel.jpg');"></div>
+                    <div class="info">
+                        <span class="category-badge">Rent Property</span>
+                        <h3 style="margin-top:10px;">Hostels & Studios</h3>
+                        <p>Find your next flexible stay.</p>
+                        <span class="price-tag">Enter Portal <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+                <a href="#sell-section" class="property-card">
+                    <div class="thumb" style="background-image:url('rt.jpg');"></div>
+                    <div class="info">
+                        <span class="category-badge">List Property</span>
+                        <h3 style="margin-top:10px;">Submit Your Listing</h3>
+                        <p>Blockchain-verified onboarding.</p>
+                        <span class="price-tag">Open Desk <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- ═══ BUY SECTION ═══ -->
+            <section id="buy-section" class="section-panel" style="border-color:var(--primary-gold); background:rgba(197,160,89,0.02);">
+                <div class="section-panel-header">
+                    <h2><i class="fas fa-magnifying-glass-dollar"></i> Acquisition Portal</h2>
+                    <p>Verified ownership records · AI price projections · Virtual walkthroughs</p>
+                </div>
+
+                <div class="filter-bar">
+                    <span class="filter-pill active">All</span>
+                    <span class="filter-pill">Residential</span>
+                    <span class="filter-pill">Commercial</span>
+                    <span class="filter-pill">Investment</span>
+                    <span class="filter-pill">Under 1 Cr</span>
+                </div>
+
+                <div class="market-grid">
+                    <div class="market-card">
+                        <div class="market-card-img">
+                            <span class="card-badge-left" style="background:var(--primary-gold);color:#000;">RESIDENTIAL</span>
+                            <span class="card-badge-right">⭐ 4.9</span>
+                        </div>
+                        <div class="market-card-body">
+                            <div class="market-card-price">NPR 85 Lakh</div>
+                            <div class="market-card-title">Nova Heights Residence</div>
+                            <div class="market-card-loc"><i class="fas fa-location-dot"></i> Baneshwor, KTM</div>
+                            <div class="market-card-specs">
+                                <span><i class="fas fa-bed"></i> 4 Beds</span>
+                                <span><i class="fas fa-bath"></i> 3 Bath</span>
+                                <span><i class="fas fa-vector-square"></i> 1800 sqft</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart(this,'Nova Heights Residence','NPR 85 Lakh')"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                                <button class="btn-fav" onclick="toggleFav(this,'Nova Heights Residence','NPR 85 Lakh')"><i class="fas fa-heart"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="market-card">
+                        <div class="market-card-img">
+                            <span class="card-badge-left" style="background:#fff;color:#000;">COMMERCIAL</span>
+                            <span class="card-badge-right">⭐ 4.7</span>
+                        </div>
+                        <div class="market-card-body">
+                            <div class="market-card-price">NPR 4.2 Cr</div>
+                            <div class="market-card-title">Pinnacle Business Hub</div>
+                            <div class="market-card-loc"><i class="fas fa-location-dot"></i> Durbarmarg, KTM</div>
+                            <div class="market-card-specs">
+                                <span><i class="fas fa-building"></i> 6 Floors</span>
+                                <span><i class="fas fa-car"></i> Parking</span>
+                                <span><i class="fas fa-vector-square"></i> 5200 sqft</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart(this,'Pinnacle Business Hub','NPR 4.2 Cr')"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                                <button class="btn-fav" onclick="toggleFav(this,'Pinnacle Business Hub','NPR 4.2 Cr')"><i class="fas fa-heart"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="market-card">
+                        <div class="market-card-img">
+                            <span class="card-badge-left" style="background:var(--primary-gold);color:#000;">INVESTMENT</span>
+                            <span class="card-badge-right">⭐ 4.8</span>
+                        </div>
+                        <div class="market-card-body">
+                            <div class="market-card-price">NPR 2.8 Cr</div>
+                            <div class="market-card-title">Skyline Heights</div>
+                            <div class="market-card-loc"><i class="fas fa-location-dot"></i> Lazimpat, KTM</div>
+                            <div class="market-card-specs">
+                                <span><i class="fas fa-bed"></i> 5 Beds</span>
+                                <span><i class="fas fa-bath"></i> 4 Bath</span>
+                                <span><i class="fas fa-vector-square"></i> 3200 sqft</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart(this,'Skyline Heights','NPR 2.8 Cr')"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                                <button class="btn-fav" onclick="toggleFav(this,'Skyline Heights','NPR 2.8 Cr')"><i class="fas fa-heart"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="market-card">
+                        <div class="market-card-img">
+                            <span class="card-badge-left" style="background:#fff;color:#000;">OFFICE</span>
+                            <span class="card-badge-right">⭐ 4.6</span>
+                        </div>
+                        <div class="market-card-body">
+                            <div class="market-card-price">NPR 18.5 Cr</div>
+                            <div class="market-card-title">Zenith Business Park</div>
+                            <div class="market-card-loc"><i class="fas fa-location-dot"></i> Naxal, KTM</div>
+                            <div class="market-card-specs">
+                                <span><i class="fas fa-building"></i> 12 Floors</span>
+                                <span><i class="fas fa-car"></i> 80 Lots</span>
+                                <span><i class="fas fa-vector-square"></i> 22000 sqft</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart(this,'Zenith Business Park','NPR 18.5 Cr')"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                                <button class="btn-fav" onclick="toggleFav(this,'Zenith Business Park','NPR 18.5 Cr')"><i class="fas fa-heart"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ RENT SECTION ═══ -->
+            <section id="rent-section" class="section-panel" style="border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.01);">
+                <div class="section-panel-header">
+                    <h2><i class="fas fa-key"></i> Rental Terminal</h2>
+                    <p>Digital agreements · Escrow deposits · Direct landlord messaging</p>
+                </div>
+
+                <div class="filter-bar">
+                    <span class="filter-pill active">All</span>
+                    <span class="filter-pill">Hostel</span>
+                    <span class="filter-pill">Studio</span>
+                    <span class="filter-pill">Apartment</span>
+                    <span class="filter-pill">Under 30k/mo</span>
+                </div>
+
+                <div class="market-grid">
+                    <div class="market-card">
+                        <div class="market-card-img">
+                            <span class="card-badge-left" style="background:#fff;color:#000;">HOSTEL</span>
+                        </div>
+                        <div class="market-card-body">
+                            <div class="market-card-price">NPR 18k <span style="font-size:0.88rem;color:var(--text-dim);">/mo</span></div>
+                            <div class="market-card-title">Elite Boys Hostel</div>
+                            <div class="market-card-loc"><i class="fas fa-location-dot"></i> Kirtipur, KTM</div>
+                            <div class="market-card-specs">
+                                <span><i class="fas fa-wifi"></i> WiFi</span>
+                                <span><i class="fas fa-utensils"></i> Meals</span>
+                                <span><i class="fas fa-shield-halved"></i> Security</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart(this,'Elite Boys Hostel','NPR 18k/mo')"><i class="fas fa-calendar-check"></i> Book Now</button>
+                                <button class="btn-fav" onclick="toggleFav(this,'Elite Boys Hostel','NPR 18k/mo')"><i class="fas fa-heart"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="market-card">
+                        <div class="market-card-img">
+                            <span class="card-badge-left" style="background:var(--primary-gold);color:#000;">STUDIO</span>
+                        </div>
+                        <div class="market-card-body">
+                            <div class="market-card-price">NPR 45k <span style="font-size:0.88rem;color:var(--text-dim);">/mo</span></div>
+                            <div class="market-card-title">Glass-Front Studio</div>
+                            <div class="market-card-loc"><i class="fas fa-location-dot"></i> Jhamsikhel, Lalitpur</div>
+                            <div class="market-card-specs">
+                                <span><i class="fas fa-couch"></i> Furnished</span>
+                                <span><i class="fas fa-snowflake"></i> AC</span>
+                                <span><i class="fas fa-car"></i> Parking</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart(this,'Glass-Front Studio','NPR 45k/mo')"><i class="fas fa-calendar-check"></i> Book Now</button>
+                                <button class="btn-fav" onclick="toggleFav(this,'Glass-Front Studio','NPR 45k/mo')"><i class="fas fa-heart"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="market-card">
+                        <div class="market-card-img">
+                            <span class="card-badge-left" style="background:var(--primary-gold);color:#000;">APARTMENT</span>
+                        </div>
+                        <div class="market-card-body">
+                            <div class="market-card-price">NPR 65k <span style="font-size:0.88rem;color:var(--text-dim);">/mo</span></div>
+                            <div class="market-card-title">Horizon Corporate Suite</div>
+                            <div class="market-card-loc"><i class="fas fa-location-dot"></i> Thamel, KTM</div>
+                            <div class="market-card-specs">
+                                <span><i class="fas fa-bed"></i> 2 Beds</span>
+                                <span><i class="fas fa-couch"></i> Furnished</span>
+                                <span><i class="fas fa-dumbbell"></i> Gym</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart(this,'Horizon Corporate Suite','NPR 65k/mo')"><i class="fas fa-calendar-check"></i> Book Now</button>
+                                <button class="btn-fav" onclick="toggleFav(this,'Horizon Corporate Suite','NPR 65k/mo')"><i class="fas fa-heart"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ SUBMISSION DESK ═══ -->
+            <section id="sell-section" class="section-panel" style="border-color:var(--primary-gold);">
+                <i class="fas fa-file-contract submission-bg-decor"></i>
+                <div class="submission-inner">
+                    <div class="section-panel-header">
+                        <h2><i class="fas fa-plus-circle"></i> Submission Desk</h2>
+                        <p>Onboard your property to the PropertyHub blockchain ecosystem in 3 steps.</p>
+                        <div style="margin-top:14px;">
+                            <span class="verify-badge"><i class="fas fa-shield-halved"></i> Biometric Verification Required</span>
+                        </div>
+                    </div>
+
+                    <div class="step-progress">
+                        <div class="step-progress-fill" id="progressFill" style="width:33%;"></div>
+                    </div>
+
+                    <div class="submission-steps">
+                        <div class="step-tab active" id="tab1" data-label="Details"><i class="fas fa-home"></i>Property Details</div>
+                        <div class="step-tab" id="tab2" data-label="Media"><i class="fas fa-images"></i>Media & Assets</div>
+                        <div class="step-tab" id="tab3" data-label="Verify"><i class="fas fa-user-check"></i>Owner Verification</div>
+                    </div>
+
+                    <div id="formWrapper">
+                        <!-- STEP 1 -->
+                        <div class="form-step active" id="step1">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Property Title *</label>
+                                    <input type="text" class="form-input" placeholder="e.g. Skyline Heights, Baneshwor">
+                                </div>
+                                <div class="form-group">
+                                    <label>Listing Type *</label>
+                                    <select class="form-input">
+                                        <option value="">Select type...</option>
+                                        <option>For Sale</option>
+                                        <option>For Rent</option>
+                                        <option>For Lease</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Category *</label>
+                                    <select class="form-input">
+                                        <option value="">Select category...</option>
+                                        <option>Residential House</option>
+                                        <option>Hostel / PG</option>
+                                        <option>Studio Apartment</option>
+                                        <option>Commercial Plaza</option>
+                                        <option>Educational Building</option>
+                                        <option>Industrial Space</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Asking Price (NPR) *</label>
+                                    <input type="text" class="form-input" placeholder="e.g. 85,00,000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Location / District *</label>
+                                    <input type="text" class="form-input" placeholder="e.g. Baneshwor, Kathmandu">
+                                </div>
+                                <div class="form-group">
+                                    <label>Land Area</label>
+                                    <input type="text" class="form-input" placeholder="e.g. 5 Aana / 200 sqft">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Property Description *</label>
+                                    <textarea class="form-input" rows="5" placeholder="Describe key features, nearby amenities, unique selling points..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Bedrooms</label>
+                                    <input type="number" class="form-input" placeholder="0" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Bathrooms</label>
+                                    <input type="number" class="form-input" placeholder="0" min="0">
+                                </div>
+                            </div>
+                            <div class="step-nav">
+                                <span></span>
+                                <button class="btn-step-next" onclick="goToStep(2)">Next: Upload Media <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2 -->
+                        <div class="form-step" id="step2">
+                            <div class="form-grid">
+                                <div class="form-group full">
+                                    <label>Property Photos *</label>
+                                    <label for="photoUpload" class="file-drop-zone">
+                                        <i class="fas fa-images"></i>
+                                        <p>Drag & drop or click to upload photos</p>
+                                        <small>JPG, PNG, WEBP · Up to 20 images · Max 50MB total</small>
+                                        <input type="file" id="photoUpload" multiple accept="image/*" onchange="handleFiles(this)">
+                                    </label>
+                                    <div id="filePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;"></div>
+                                </div>
+                                <div class="form-group full">
+                                    <label>Floor Plan / Documents</label>
+                                    <label for="docUpload" class="file-drop-zone" style="height:120px;">
+                                        <i class="fas fa-file-pdf" style="font-size:1.8rem;"></i>
+                                        <p style="font-size:0.84rem;">Upload floor plan, land ownership cert, or other docs</p>
+                                        <small>PDF, DOC · Max 20MB</small>
+                                        <input type="file" id="docUpload" accept=".pdf,.doc,.docx">
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>Virtual Tour Link (optional)</label>
+                                    <input type="url" class="form-input" placeholder="https://tour.example.com/...">
+                                </div>
+                                <div class="form-group">
+                                    <label>Video Walkthrough (optional)</label>
+                                    <input type="url" class="form-input" placeholder="YouTube or Vimeo link">
+                                </div>
+                            </div>
+                            <div class="step-nav">
+                                <button class="btn-step-back" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                                <button class="btn-step-next" onclick="goToStep(3)">Next: Verify Identity <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3 -->
+                        <div class="form-step" id="step3">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Full Legal Name *</label>
+                                    <input type="text" class="form-input" placeholder="As on citizenship">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contact Number *</label>
+                                    <input type="tel" class="form-input" placeholder="+977 98XXXXXXXX">
+                                </div>
+                                <div class="form-group">
+                                    <label>Citizenship / Passport Number *</label>
+                                    <input type="text" class="form-input" placeholder="ID document number">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Address *</label>
+                                    <input type="email" class="form-input" placeholder="owner@example.com">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Upload Identity Document *</label>
+                                    <label for="idUpload" class="file-drop-zone" style="height:130px;">
+                                        <i class="fas fa-id-card"></i>
+                                        <p>Citizenship front & back, or Passport</p>
+                                        <small>JPG, PNG, PDF · Max 10MB</small>
+                                        <input type="file" id="idUpload" accept="image/*,.pdf">
+                                    </label>
+                                </div>
+                                <div class="form-group full">
+                                    <div class="form-row-check">
+                                        <input type="checkbox" id="consent1">
+                                        <label for="consent1">I confirm I am the legal owner or authorized representative of this property, and all information provided is accurate and truthful.</label>
+                                    </div>
+                                </div>
+                                <div class="form-group full">
+                                    <div class="form-row-check">
+                                        <input type="checkbox" id="consent2">
+                                        <label for="consent2">I agree to PropertyHub's <a href="#">Terms of Service</a> and consent to blockchain-based record keeping of this listing.</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="step-nav">
+                                <button class="btn-step-back" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                                <button class="btn-step-next" onclick="submitListing()" style="padding:13px 40px;">
+                                    <i class="fas fa-rocket"></i> Launch Verification
+                                </button>
+                            </div>
+                        </div>
+                    </div><!-- /formWrapper -->
+
+                    <!-- SUCCESS -->
+                    <div class="submission-success" id="submissionSuccess">
+                        <div class="success-check"><i class="fas fa-check"></i></div>
+                        <h3 style="font-size:clamp(1.5rem,4vw,2rem); margin-bottom:12px;">Submission Received!</h3>
+                        <p style="color:var(--text-dim); max-width:460px; margin:0 auto 28px; font-size:0.93rem;">
+                            Your property has been submitted to the blockchain verification queue. Our team will review and contact you within 24–48 hours.
+                        </p>
+                        <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+                            <button class="btn-gold" onclick="resetForm()" style="padding:13px 32px; font-size:0.9rem;">Submit Another</button>
+                            <a href="index.html" style="padding:13px 32px; display:inline-flex; align-items:center; border:1px solid var(--glass-border); border-radius:8px; color:var(--text-dim); text-decoration:none; font-size:0.9rem; transition:0.3s;" onmouseover="this.style.borderColor='var(--primary-gold)';this.style.color='var(--primary-gold)'" onmouseout="this.style.borderColor='var(--glass-border)';this.style.color='var(--text-dim)'">Back to Home</a>
+                        </div>
+                    </div>
+                </div><!-- /submission-inner -->
+            </section>
+        </main>
+
+        <footer>
+            <p>© 2026 <span>PropertyHub</span> Kathmandu. Developed by Nishan, Bigyan, Santosh, Dipshan and Nibesh.</p>
+        </footer>
+    </div>
+
+    <script>
+        // ── NAV SCROLL ──
+        window.addEventListener('scroll', () => {
+            document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // ── HAMBURGER ──
+        const hamburger = document.getElementById('hamburger');
+        const navLinks  = document.getElementById('navLinks');
+
+        function toggleMenu() {
+            hamburger.classList.toggle('open');
+            navLinks.classList.toggle('mobile-active');
+        }
+        hamburger.addEventListener('click', toggleMenu);
+        hamburger.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }
+        });
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => { hamburger.classList.remove('open'); navLinks.classList.remove('mobile-active'); });
+        });
+        document.addEventListener('click', e => {
+            if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                hamburger.classList.remove('open');
+                navLinks.classList.remove('mobile-active');
+            }
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFavPanel(); closeCartPanel(); hamburger.classList.remove('open'); navLinks.classList.remove('mobile-active'); } });
+
+        // ── FILTER PILLS ──
+        document.querySelectorAll('.filter-pill').forEach(pill => {
+            pill.addEventListener('click', function() {
+                this.closest('.filter-bar').querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // ── TOAST ──
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2600);
+        }
+
+        // ── CART & FAV STATE ──
+        let cart = [], favs = [];
+
+        function updateBadge(id, count) {
+            const badge = document.getElementById(id);
+            badge.textContent = count;
+            badge.classList.toggle('visible', count > 0);
+        }
+
+        function renderCart() {
+            const body = document.getElementById('cart-body');
+            const footer = document.getElementById('cart-footer');
+            const empty = document.getElementById('cart-empty');
+            body.querySelectorAll('.panel-item').forEach(el => el.remove());
+            if (cart.length === 0) { empty.style.display = ''; footer.style.display = 'none'; }
+            else {
+                empty.style.display = 'none'; footer.style.display = '';
+                cart.forEach((item, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'panel-item';
+                    el.innerHTML = `<div class="panel-item-img"></div><div class="panel-item-info"><h4>${item.name}</h4><span>${item.price}</span></div><button class="panel-item-remove" onclick="removeFromCart(${i},this)"><i class="fas fa-trash-can"></i></button>`;
+                    body.appendChild(el);
+                });
+                document.getElementById('cart-count-label').textContent = cart.length + ' propert' + (cart.length === 1 ? 'y' : 'ies');
+            }
+            updateBadge('cart-badge', cart.length);
+        }
+
+        function renderFavs() {
+            const body = document.getElementById('fav-body');
+            const empty = document.getElementById('fav-empty');
+            body.querySelectorAll('.panel-item').forEach(el => el.remove());
+            if (favs.length === 0) { empty.style.display = ''; }
+            else {
+                empty.style.display = 'none';
+                favs.forEach((item, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'panel-item';
+                    el.innerHTML = `<div class="panel-item-img"></div><div class="panel-item-info"><h4>${item.name}</h4><span>${item.price}</span></div><button class="panel-item-remove" onclick="removeFromFav(${i})"><i class="fas fa-trash-can"></i></button>`;
+                    body.appendChild(el);
+                });
+            }
+            updateBadge('fav-badge', favs.length);
+        }
+
+        function addToCart(btn, name, price) {
+            if (cart.find(c => c.name === name)) { showToast('Already in cart'); return; }
+            cart.push({ name, price });
+            btn.innerHTML = '<i class="fas fa-check"></i> In Cart';
+            btn.classList.add('in-cart');
+            renderCart();
+            showToast(name + ' added to cart');
+        }
+
+        function removeFromCart(i, btn) {
+            const name = cart[i].name; cart.splice(i, 1); renderCart();
+            document.querySelectorAll('.btn-cart').forEach(b => {
+                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(name)) {
+                    b.innerHTML = '<i class="fas fa-shopping-bag"></i> Add to Cart'; b.classList.remove('in-cart');
+                }
+            });
+        }
+
+        function toggleFav(btn, name, price) {
+            const idx = favs.findIndex(f => f.name === name);
+            if (idx > -1) { favs.splice(idx, 1); btn.classList.remove('active'); showToast('Removed from favourites'); }
+            else { favs.push({ name, price }); btn.classList.add('active'); showToast('❤️ Saved to favourites'); }
+            renderFavs();
+        }
+
+        function removeFromFav(i) {
+            const name = favs[i].name; favs.splice(i, 1); renderFavs();
+            document.querySelectorAll('.btn-fav').forEach(b => { if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(name)) b.classList.remove('active'); });
+        }
+
+        function openCartPanel()  { document.getElementById('cart-panel').classList.add('open'); document.getElementById('cart-overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+        function closeCartPanel() { document.getElementById('cart-panel').classList.remove('open'); document.getElementById('cart-overlay').classList.remove('open'); document.body.style.overflow = ''; }
+        function openFavPanel()   { document.getElementById('fav-panel').classList.add('open'); document.getElementById('fav-overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+        function closeFavPanel()  { document.getElementById('fav-panel').classList.remove('open'); document.getElementById('fav-overlay').classList.remove('open'); document.body.style.overflow = ''; }
+
+        // ── MULTI-STEP FORM ──
+        let currentStep = 1;
+        const totalSteps = 3;
+        let formData = { step1: {}, step2: {}, step3: {} };
+
+        function saveFormData(stepNum) {
+            document.getElementById('step'+stepNum).querySelectorAll('input, select, textarea').forEach(input => {
+                if (input.type === 'file') return;
+                const key = input.placeholder || input.id;
+                formData['step'+stepNum][key] = input.type === 'checkbox' ? input.checked : input.value;
+            });
+        }
+
+        function restoreFormData(stepNum) {
+            document.getElementById('step'+stepNum).querySelectorAll('input, select, textarea').forEach(input => {
+                if (input.type === 'file') return;
+                const key = input.placeholder || input.id;
+                if (formData['step'+stepNum][key] !== undefined) {
+                    if (input.type === 'checkbox') input.checked = formData['step'+stepNum][key];
+                    else input.value = formData['step'+stepNum][key];
+                }
+            });
+        }
+
+        function validateStep1() {
+            const s = document.getElementById('step1');
+            const title = s.querySelector('[placeholder="e.g. Skyline Heights, Baneshwor"]');
+            const selects = s.querySelectorAll('select.form-input');
+            const price = s.querySelector('[placeholder="e.g. 85,00,000"]');
+            const loc = s.querySelector('[placeholder="e.g. Baneshwor, Kathmandu"]');
+            const desc = s.querySelector('textarea');
+            if (!title.value.trim()) { showToast('⚠️ Please enter Property Title'); return false; }
+            if (!selects[0].value) { showToast('⚠️ Please select Listing Type'); return false; }
+            if (!selects[1].value) { showToast('⚠️ Please select Category'); return false; }
+            if (!price.value.trim()) { showToast('⚠️ Please enter Asking Price'); return false; }
+            if (!loc.value.trim()) { showToast('⚠️ Please enter Location'); return false; }
+            if (!desc.value.trim()) { showToast('⚠️ Please enter Property Description'); return false; }
+            return true;
+        }
+
+        function validateStep2() {
+            const photoUpload = document.getElementById('photoUpload');
+            if (!photoUpload.files || photoUpload.files.length === 0) { showToast('⚠️ Please upload at least one photo'); return false; }
+            return true;
+        }
+
+        function validateStep3() {
+            const name = document.querySelector('[placeholder="As on citizenship"]');
+            const phone = document.querySelector('[placeholder="+977 98XXXXXXXX"]');
+            const cit = document.querySelector('[placeholder="ID document number"]');
+            const email = document.querySelector('[placeholder="owner@example.com"]');
+            const id = document.getElementById('idUpload');
+            const c1 = document.getElementById('consent1');
+            const c2 = document.getElementById('consent2');
+            if (!name.value.trim()) { showToast('⚠️ Please enter Full Legal Name'); return false; }
+            if (!phone.value.trim()) { showToast('⚠️ Please enter Contact Number'); return false; }
+            if (!cit.value.trim()) { showToast('⚠️ Please enter Citizenship/Passport Number'); return false; }
+            if (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) { showToast('⚠️ Please enter valid email'); return false; }
+            if (!id.files || id.files.length === 0) { showToast('⚠️ Please upload Identity Document'); return false; }
+            if (!c1.checked) { showToast('⚠️ Please confirm ownership'); return false; }
+            if (!c2.checked) { showToast('⚠️ Please agree to Terms of Service'); return false; }
+            return true;
+        }
+
+        function goToStep(n) {
+            if (currentStep === 1 && n > 1 && !validateStep1()) return;
+            if (currentStep === 2 && n > 2 && !validateStep2()) return;
+            saveFormData(currentStep);
+            document.getElementById('step'+currentStep).classList.remove('active');
+            document.getElementById('tab'+currentStep).classList.remove('active');
+            currentStep = n;
+            document.getElementById('step'+currentStep).classList.add('active');
+            document.getElementById('tab'+currentStep).classList.add('active');
+            document.getElementById('progressFill').style.width = (n / totalSteps * 100) + '%';
+            restoreFormData(currentStep);
+            document.getElementById('sell-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        document.getElementById('tab1').addEventListener('click', () => { if (currentStep > 1) goToStep(1); });
+        document.getElementById('tab2').addEventListener('click', () => { if (currentStep === 1 && validateStep1()) goToStep(2); else if (currentStep === 3) goToStep(2); });
+        document.getElementById('tab3').addEventListener('click', () => { if (currentStep === 2 && validateStep2()) goToStep(3); });
+
+        function submitListing() {
+            if (!validateStep3()) return;
+            saveFormData(3);
+            document.getElementById('formWrapper').style.display = 'none';
+            document.getElementById('submissionSuccess').classList.add('show');
+            document.querySelector('.submission-steps').style.display = 'none';
+            document.querySelector('.step-progress').style.display = 'none';
+        }
+
+        function resetForm() {
+            document.querySelectorAll('#formWrapper input, #formWrapper select, #formWrapper textarea').forEach(f => {
+                if (f.type === 'file') f.value = '';
+                else if (f.type === 'checkbox') f.checked = false;
+                else f.value = '';
+            });
+            document.getElementById('filePreview').innerHTML = '';
+            formData = { step1: {}, step2: {}, step3: {} };
+            document.getElementById('formWrapper').style.display = '';
+            document.getElementById('submissionSuccess').classList.remove('show');
+            document.querySelector('.submission-steps').style.display = '';
+            document.querySelector('.step-progress').style.display = '';
+            currentStep = 1;
+            document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('tab1').classList.add('active');
+            document.getElementById('progressFill').style.width = '33%';
+        }
+
+        function handleFiles(input) {
+            if (!input.files || !input.files.length) { document.getElementById('filePreview').innerHTML = ''; return; }
+            const validTypes = ['image/jpeg','image/png','image/webp'];
+            for (let f of input.files) { if (!validTypes.includes(f.type)) { showToast('⚠️ Only JPG, PNG, WEBP allowed'); input.value = ''; return; } }
+            const preview = document.getElementById('filePreview');
+            preview.innerHTML = '';
+            Array.from(input.files).slice(0, 6).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('div');
+                    img.style.cssText = `width:64px;height:64px;border-radius:10px;background:url(${e.target.result}) center/cover;border:1px solid var(--glass-border);flex-shrink:0;`;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+            if (input.files.length > 6) {
+                const more = document.createElement('div');
+                more.style.cssText = 'width:64px;height:64px;border-radius:10px;background:var(--glass-bg);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;color:var(--primary-gold);font-size:0.8rem;font-weight:bold;';
+                more.textContent = '+' + (input.files.length - 6);
+                preview.appendChild(more);
+            }
+            showToast(`✓ ${input.files.length} file(s) selected`);
+        }
+
+        document.getElementById('docUpload').addEventListener('change', function() { if (this.files.length > 0) showToast(`✓ Document: ${this.files[0].name}`); });
+        document.getElementById('idUpload').addEventListener('change', function() { if (this.files.length > 0) showToast(`✓ ID: ${this.files[0].name}`); });
+
+        // Drag & Drop
+        document.querySelectorAll('.file-drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--primary-gold)'; zone.style.background = 'rgba(197,160,89,0.1)'; });
+            zone.addEventListener('dragleave', () => { zone.style.borderColor = 'rgba(197,160,89,0.4)'; zone.style.background = 'rgba(197,160,89,0.02)'; });
+            zone.addEventListener('drop', e => {
+                e.preventDefault(); zone.style.borderColor = 'rgba(197,160,89,0.4)'; zone.style.background = 'rgba(197,160,89,0.02)';
+                const input = zone.querySelector('input[type="file"]');
+                if (input) { input.files = e.dataTransfer.files; input.dispatchEvent(new Event('change', { bubbles: true })); }
+            });
+        });
+    </script>
+</body>
+</html>

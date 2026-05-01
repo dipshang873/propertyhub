@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Our Vision | PropertyHub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* ── CSS VARIABLE FALLBACKS ── */
+        :root {
+            --nav-height: 70px;
+            --primary-gold: #c5a059;
+            --glass-bg: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.08);
+            --text-dim: rgba(255,255,255,0.55);
+            --transition: all 0.3s ease;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        /* ── NAVBAR ── */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5%;
+            height: var(--nav-height);
+            background: rgba(11, 13, 23, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        nav.scrolled {
+            background: rgba(11, 13, 23, 0.98);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+        }
+        .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            transition: 0.3s;
+            padding: 6px 0;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 0; height: 2px;
+            background: var(--primary-gold);
+            transition: width 0.3s ease;
+        }
+        .nav-links a:hover::after,
+        .nav-links a.active::after { width: 100%; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary-gold); }
+
+        /* ── NAV ACTIONS ── */
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
+        .nav-icon-btn {
+            position: relative;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        .nav-icon-btn:hover {
+            border-color: var(--primary-gold);
+            color: var(--primary-gold);
+            background: rgba(197,160,89,0.08);
+        }
+        .nav-badge {
+            position: absolute;
+            top: -6px; right: -6px;
+            background: var(--primary-gold);
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: bold;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0;
+            transform: scale(0);
+            transition: 0.2s ease;
+        }
+        .nav-badge.visible { opacity: 1; transform: scale(1); }
+
+        /* ── HAMBURGER ── */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+        }
+        .hamburger span {
+            display: block;
+            width: 24px; height: 2px;
+            background: var(--text-dim);
+            border-radius: 2px;
+            transition: 0.3s ease;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: var(--primary-gold); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--primary-gold); }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            padding: 15px 25px; border-radius: 10px; color: #fff;
+            z-index: 3000; opacity: 0; transition: 0.3s;
+            white-space: nowrap;
+            max-width: calc(100vw - 40px);
+        }
+        .toast i { color: var(--primary-gold); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ── SIDE PANEL OVERLAY ── */
+        .side-panel-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .side-panel-overlay.open { opacity: 1; pointer-events: all; }
+
+        /* ── SIDE PANEL ── */
+        .side-panel {
+            position: fixed; right: -420px; top: 0;
+            height: 100vh;
+            width: min(400px, 100vw);
+            background: #10121e;
+            border-left: 1px solid var(--glass-border);
+            z-index: 2001;
+            transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column;
+        }
+        .side-panel.open { right: 0; }
+        .side-panel-header {
+            padding: 25px 28px; border-bottom: 1px solid var(--glass-border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(197,160,89,0.04);
+        }
+        .side-panel-header h3 { color: var(--primary-gold); font-size: 1.1rem; letter-spacing: 0.5px; }
+        .close-panel {
+            background: none; border: none; color: var(--text-dim);
+            font-size: 1.3rem; cursor: pointer; transition: 0.2s; padding: 5px;
+        }
+        .close-panel:hover { color: #fff; }
+        .side-panel-body { flex: 1; overflow-y: auto; padding: 20px 28px; }
+        .side-panel-body::-webkit-scrollbar { width: 4px; }
+        .side-panel-body::-webkit-scrollbar-track { background: transparent; }
+        .side-panel-body::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+        .panel-empty { text-align: center; padding: 40px 20px; color: var(--text-dim); }
+        .panel-empty i { font-size: 3rem; color: rgba(197,160,89,0.2); display: block; margin-bottom: 15px; }
+        .panel-item {
+            display: flex; gap: 12px; align-items: center;
+            padding: 12px; margin-bottom: 10px;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; transition: 0.2s;
+        }
+        .panel-item:hover { border-color: var(--primary-gold); }
+        .panel-item-img { width: 50px; height: 50px; background: var(--glass-bg); border-radius: 8px; flex-shrink: 0; }
+        .panel-item-info { flex: 1; min-width: 0; }
+        .panel-item-info h4 { font-size: 0.88rem; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .panel-item-info span { font-size: 0.8rem; color: var(--primary-gold); font-weight: bold; }
+        .panel-item-remove {
+            background: none; border: none; color: var(--text-dim);
+            cursor: pointer; transition: 0.2s; font-size: 0.9rem; padding: 5px;
+        }
+        .panel-item-remove:hover { color: #ff6b6b; }
+        .side-panel-footer { padding: 20px 28px; border-top: 1px solid var(--glass-border); }
+        .panel-total { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .panel-total strong { color: var(--primary-gold); font-size: 1rem; }
+
+        /* ── HERO BANNER ── */
+        .hero-banner {
+            text-align: center;
+            padding: calc(var(--nav-height) + 50px) 0 50px;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 60px;
+        }
+        .hero-banner h4 {
+            color: var(--primary-gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 14px;
+        }
+        .hero-banner h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+
+        /* ── MISSION GRID ── */
+        .mission-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 70px;
+        }
+        .vision-card {
+            background: linear-gradient(135deg, rgba(197, 160, 89, 0.1), transparent);
+            padding: 40px;
+            border-radius: 20px;
+            border-left: 4px solid var(--primary-gold);
+        }
+        .vision-card h2 { color: #fff; margin-bottom: 20px; font-size: clamp(1.4rem, 2.5vw, 2rem); }
+        .vision-card p { color: var(--text-dim); line-height: 1.8; font-size: 1.05rem; }
+        .mission-icon {
+            text-align: center;
+        }
+        .mission-icon i {
+            font-size: clamp(4rem, 10vw, 8rem);
+            color: var(--primary-gold);
+            opacity: 0.5;
+        }
+
+        /* ── STATS GRID ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 80px;
+        }
+        .stat-card {
+            text-align: center;
+            border: 1px solid var(--primary-gold);
+            padding: 20px 10px;
+            border-radius: 15px;
+            transition: var(--transition);
+        }
+        .stat-card:hover {
+            background: rgba(197,160,89,0.06);
+            transform: translateY(-3px);
+        }
+        .stat-card h2 { color: var(--primary-gold); font-size: 1.4rem; margin-bottom: 6px; }
+        .stat-card p { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.5px; }
+
+        /* ── TEAM SECTION ── */
+        .team-section {
+            margin-top: 70px;
+            margin-bottom: 80px;
+            text-align: center;
+        }
+        .team-section h2 { font-size: clamp(1.8rem, 3.5vw, 2.5rem); margin-bottom: 10px; }
+        .team-section > p { color: var(--text-dim); margin-bottom: 0; }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        .member-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 30px 20px;
+            border-radius: 20px;
+            transition: var(--transition);
+        }
+        .member-card:hover {
+            border-color: var(--primary-gold);
+            transform: translateY(-5px);
+        }
+        .member-card i { font-size: 2.6rem; color: var(--primary-gold); margin-bottom: 15px; display: block; }
+        .member-card h4 { color: #fff; margin-bottom: 6px; }
+        .member-card p { font-size: 0.82rem; color: var(--text-dim); }
+
+        /* ── RESPONSIVE: TABLET (≤ 900px) ── */
+        @media (max-width: 900px) {
+            /* Mobile nav */
+            .nav-links {
+                position: fixed;
+                top: var(--nav-height);
+                left: 0;
+                width: 100%;
+                flex-direction: column;
+                background: rgba(11, 13, 23, 0.98);
+                backdrop-filter: blur(20px);
+                padding: 20px 0 30px;
+                gap: 0;
+                border-bottom: 1px solid var(--glass-border);
+                transform: translateY(-110%);
+                opacity: 0;
+                pointer-events: none;
+                transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+            }
+            .nav-links.mobile-active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+            .nav-links li { width: 100%; }
+            .nav-links a {
+                display: block;
+                padding: 14px 5%;
+                font-size: 1rem;
+                border-bottom: 1px solid var(--glass-border);
+            }
+            .nav-links a::after { display: none; }
+            .nav-links li:last-child a { border-bottom: none; }
+            .hamburger { display: flex; }
+
+            /* Mission: stack vertically */
+            .mission-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                margin-bottom: 50px;
+            }
+            .mission-icon { order: -1; }
+            .mission-icon i { font-size: 5rem; }
+
+            /* Stats: 3 columns */
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+                margin-bottom: 50px;
+            }
+
+            .team-section { margin-top: 50px; }
+        }
+
+        /* ── RESPONSIVE: MOBILE (≤ 600px) ── */
+        @media (max-width: 600px) {
+            nav { padding: 0 4%; }
+            .nav-actions .btn-gold { display: none; }
+
+            .hero-banner {
+                padding: calc(var(--nav-height) + 30px) 0 35px;
+                margin-bottom: 40px;
+            }
+
+            .vision-card { padding: 25px 20px; }
+
+            /* Stats: 2 columns */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                margin-bottom: 40px;
+            }
+            .stat-card { padding: 16px 8px; }
+            .stat-card h2 { font-size: 1.15rem; }
+
+            .team-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .member-card { padding: 22px 15px; }
+            .member-card i { font-size: 2rem; }
+
+            .team-section { margin-top: 40px; margin-bottom: 50px; }
+            .side-panel { width: 100vw; }
+        }
+
+        /* ── RESPONSIVE: SMALL MOBILE (≤ 380px) ── */
+        @media (max-width: 380px) {
+            .nav-icon-btn { width: 36px; height: 36px; font-size: 0.85rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .team-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg">Added!</span></div>
+
+    <!-- SIDE PANEL: FAVOURITES -->
+    <div class="side-panel-overlay" id="fav-overlay" onclick="closeFavPanel()"></div>
+    <div class="side-panel" id="fav-panel">
+        <div class="side-panel-header">
+            <h3><i class="fas fa-heart" style="margin-right:8px;"></i> Saved Favourites</h3>
+            <button class="close-panel" onclick="closeFavPanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="side-panel-body" id="fav-body">
+            <div class="panel-empty" id="fav-empty">
+                <i class="fas fa-heart-crack"></i>
+                <p>No favourites yet.</p>
+                <small>Tap the ♡ on any listing to save it here.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDE PANEL: CART -->
+    <div class="side-panel-overlay" id="cart-overlay" onclick="closeCartPanel()"></div>
+    <div class="side-panel" id="cart-panel">
+        <div class="side-panel-header">
+            <h3><i class="fas fa-shopping-bag" style="margin-right:8px;"></i> Your Cart</h3>
+            <button class="close-panel" onclick="closeCartPanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="side-panel-body" id="cart-body">
+            <div class="panel-empty" id="cart-empty">
+                <i class="fas fa-bag-shopping"></i>
+                <p>Your cart is empty.</p>
+                <small>Add a property to schedule a viewing or inquiry.</small>
+            </div>
+        </div>
+        <div class="side-panel-footer" id="cart-footer" style="display:none;">
+            <div class="panel-total">
+                <span>Properties Selected</span>
+                <strong id="cart-count-label">0</strong>
+            </div>
+            <button class="btn-gold" style="width:100%; padding:16px; font-size:0.9rem;">
+                <i class="fas fa-calendar-check"></i> &nbsp;Request Viewing for All
+            </button>
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+        <nav id="mainNav">
+            <a href="index.html" class="logo">
+                <i class="fas fa-house-chimney-window" style="color: var(--primary-gold);"></i> PropertyHub
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="feature.html">Features</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="testimonial.html">Testimonials</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="listing.html">Market</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="nav-icon-btn" onclick="openFavPanel()" title="Saved Favourites">
+                    <i class="fas fa-heart"></i>
+                    <span class="nav-badge" id="fav-badge">0</span>
+                </button>
+                <button class="nav-icon-btn" onclick="openCartPanel()" title="Cart">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="nav-badge" id="cart-badge">0</span>
+                </button>
+                <a href="listing.html#sell-section" class="btn-gold" style="text-decoration:none; padding: 0.6rem 1.4rem;">List Property</a>
+            </div>
+            <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+
+        <main class="container animate">
+
+            <!-- Hero Banner -->
+            <div class="hero-banner">
+                <h4>The Future of Trust</h4>
+                <h1>Redefining Real Estate</h1>
+            </div>
+
+            <!-- Mission Section -->
+            <div class="mission-grid">
+                <div class="vision-card">
+                    <h2>Our Unified Ecosystem</h2>
+                    <p>
+                        PropertyHub isn't just a marketplace; it's a solution to the transparency gap. By integrating Biometric Identity Verification and Blockchain-secured handling, we make buying a house as simple and secure as any digital transaction.
+                    </p>
+                </div>
+                <div class="mission-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h2>15k+</h2>
+                    <p>PROPERTIES</p>
+                </div>
+                <div class="stat-card">
+                    <h2>$2.4B</h2>
+                    <p>VOLUME</p>
+                </div>
+                <div class="stat-card">
+                    <h2>99.9%</h2>
+                    <p>ESCROW</p>
+                </div>
+                <div class="stat-card">
+                    <h2>38k+</h2>
+                    <p>USERS</p>
+                </div>
+                <div class="stat-card">
+                    <h2>Safe</h2>
+                    <p>BLOCKCHAIN</p>
+                </div>
+                <div class="stat-card">
+                    <h2>AI</h2>
+                    <p>INSIGHTS</p>
+                </div>
+            </div>
+
+            <!-- Team Section -->
+            <section class="team-section">
+                <h2>The Architects</h2>
+                <p>The minds driving technical innovation in Kathmandu.</p>
+                <div class="team-grid">
+                    <div class="member-card"><i class="fas fa-user-gear"></i><h4>Nishan</h4><p>Lead Architect</p></div>
+                    <div class="member-card"><i class="fas fa-code"></i><h4>Bigyan</h4><p>Backend Logic</p></div>
+                    <div class="member-card"><i class="fas fa-shield-halved"></i><h4>Santosh</h4><p>Security</p></div>
+                    <div class="member-card"><i class="fas fa-terminal"></i><h4>Dipshan</h4><p>AI Engine</p></div>
+                    <div class="member-card"><i class="fas fa-pen-nib"></i><h4>Nibesh</h4><p>UX Design</p></div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="op">
+            <p>2026 <span>PropertyHub</span> Kathmandu.</p>
+        </footer>
+    </div>
+
+    <script>
+        // ── NAV SCROLL EFFECT ──
+        window.addEventListener('scroll', () => {
+            document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // ── HAMBURGER MENU TOGGLE ──
+        const hamburger = document.getElementById('hamburger');
+        const navLinks  = document.getElementById('navLinks');
+
+        function toggleMenu() {
+            hamburger.classList.toggle('open');
+            navLinks.classList.toggle('mobile-active');
+        }
+
+        hamburger.addEventListener('click', toggleMenu);
+        hamburger.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('open');
+                navLinks.classList.remove('mobile-active');
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                hamburger.classList.remove('open');
+                navLinks.classList.remove('mobile-active');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { closeFavPanel(); closeCartPanel(); }
+        });
+
+        // ── TOAST ──
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2600);
+        }
+
+        // ── PANEL STATE ──
+        let cart = [];
+        let favs = [];
+
+        function updateBadge(id, count) {
+            const badge = document.getElementById(id);
+            badge.textContent = count;
+            badge.classList.toggle('visible', count > 0);
+        }
+
+        function renderCart() {
+            const body   = document.getElementById('cart-body');
+            const footer = document.getElementById('cart-footer');
+            const empty  = document.getElementById('cart-empty');
+            body.querySelectorAll('.panel-item').forEach(el => el.remove());
+            if (cart.length === 0) {
+                empty.style.display = '';
+                footer.style.display = 'none';
+            } else {
+                empty.style.display = 'none';
+                footer.style.display = '';
+                cart.forEach((item, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'panel-item';
+                    el.innerHTML = `
+                        <div class="panel-item-img"></div>
+                        <div class="panel-item-info">
+                            <h4>${item.name}</h4>
+                            <span>${item.price}</span>
+                        </div>
+                        <button class="panel-item-remove" onclick="removeFromCart(${i})" title="Remove">
+                            <i class="fas fa-trash-can"></i>
+                        </button>`;
+                    body.appendChild(el);
+                });
+                document.getElementById('cart-count-label').textContent =
+                    cart.length + ' propert' + (cart.length === 1 ? 'y' : 'ies');
+            }
+            updateBadge('cart-badge', cart.length);
+        }
+
+        function renderFavs() {
+            const body  = document.getElementById('fav-body');
+            const empty = document.getElementById('fav-empty');
+            body.querySelectorAll('.panel-item').forEach(el => el.remove());
+            if (favs.length === 0) {
+                empty.style.display = '';
+            } else {
+                empty.style.display = 'none';
+                favs.forEach((item, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'panel-item';
+                    el.innerHTML = `
+                        <div class="panel-item-img"></div>
+                        <div class="panel-item-info">
+                            <h4>${item.name}</h4>
+                            <span>${item.price}</span>
+                        </div>
+                        <button class="panel-item-remove" onclick="removeFromFav(${i})" title="Remove">
+                            <i class="fas fa-trash-can"></i>
+                        </button>`;
+                    body.appendChild(el);
+                });
+            }
+            updateBadge('fav-badge', favs.length);
+        }
+
+        function removeFromCart(i) { cart.splice(i, 1); renderCart(); }
+        function removeFromFav(i)  { favs.splice(i, 1); renderFavs(); }
+
+        function openCartPanel() {
+            document.getElementById('cart-panel').classList.add('open');
+            document.getElementById('cart-overlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeCartPanel() {
+            document.getElementById('cart-panel').classList.remove('open');
+            document.getElementById('cart-overlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        function openFavPanel() {
+            document.getElementById('fav-panel').classList.add('open');
+            document.getElementById('fav-overlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeFavPanel() {
+            document.getElementById('fav-panel').classList.remove('open');
+            document.getElementById('fav-overlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    </script>
+</body>
+</html>
